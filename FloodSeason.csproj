@@ -19,9 +19,11 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <!-- Build straight into the mod folder so the game can pick it up. -->
-    <OutputPath>$(MSBuildProjectDirectory)\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- Default OutputPath (bin\Debug\netstandard2.1\) — a CopyToModRoot
+         target below copies Code.dll up to the project root after build,
+         where the game actually loads it from. We do NOT set OutputPath
+         to the project root directly: that makes the SDK exclude every
+         .cs file in the project from compilation, producing an empty DLL. -->
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 
     <!-- Embed the PDB inside Code.dll so stack traces show line numbers
@@ -79,11 +81,31 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- TickableComponent — base class of WaterSource. The compiler walks
+         WaterSource's full inheritance chain to verify our GetComponent<> call,
+         so we need this transitive reference even though we never name it. -->
+    <Reference Include="Timberborn.TickSystem">
+      <HintPath>$(ManagedDir)\Timberborn.TickSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- Debug.Log. -->
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
     </Reference>
+
+    <!-- JsonUtility lives in a Unity sub-module separate from CoreModule. -->
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(ManagedDir)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
+
+  <!-- After every build, copy the freshly-built Code.dll up to the mod
+       folder so the game can load it without a manual copy step. -->
+  <Target Name="CopyToModRoot" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)" />
+  </Target>
 
 </Project>
