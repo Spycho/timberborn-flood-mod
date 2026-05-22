@@ -21,16 +21,22 @@ internal class FloodSeasonWaterStrengthModifier
     : BaseComponent, IAwakableComponent, IInitializableEntity, IWaterStrengthModifier {
 
     private readonly WeatherService _weatherService;
+    private readonly FloodSeasonSettings _settings;
 
     // Set in Awake, used after — null-forgiving because the framework
     // guarantees Awake runs before InitializeEntity / GetStrengthModifier.
     private WaterSource _waterSource = null!;
 
-    // Bindito injects WeatherService via constructor — the same DI container
-    // that wires the rest of the game's services. Singleton; one instance
-    // shared across every modifier on the map.
-    public FloodSeasonWaterStrengthModifier(WeatherService weatherService) {
+    // Bindito injects both services via constructor. WeatherService is a
+    // game-wide singleton; FloodSeasonSettings is our own settings owner,
+    // also bound as singleton — so every modifier on the map reads from
+    // the same instance, and a slider change in the UI propagates to all
+    // water sources on the next tick.
+    public FloodSeasonWaterStrengthModifier(
+        WeatherService weatherService,
+        FloodSeasonSettings settings) {
         _weatherService = weatherService;
+        _settings = settings;
     }
 
     public void Awake() {
@@ -43,7 +49,7 @@ internal class FloodSeasonWaterStrengthModifier
     }
 
     public float GetStrengthModifier() {
-        return _weatherService.IsHazardousWeather ? 1.0f : FloodSeasonSettings.Multiplier;
+        return _weatherService.IsHazardousWeather ? 1.0f : _settings.CurrentMultiplier;
     }
 
 }

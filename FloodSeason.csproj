@@ -35,6 +35,10 @@
   <PropertyGroup>
     <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Timberborn</GameDir>
     <ManagedDir>$(GameDir)\Timberborn_Data\Managed</ManagedDir>
+    <!-- Steam Workshop folder for eMka.ModSettings (item id 3283831040).
+         We reference DLLs out of the player's subscribed copy rather than
+         vendoring them, so we never redistribute a third-party mod. -->
+    <ModSettingsDir Condition="'$(ModSettingsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\workshop\content\1062090\3283831040\version-1.0\Scripts</ModSettingsDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -95,9 +99,26 @@
       <Private>false</Private>
     </Reference>
 
-    <!-- JsonUtility lives in a Unity sub-module separate from CoreModule. -->
-    <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>$(ManagedDir)\UnityEngine.JSONSerializeModule.dll</HintPath>
+    <!-- ISettings is the PlayerPrefs wrapper ModSettingsOwner persists
+         through; ModRepository is needed for its constructor too. -->
+    <Reference Include="Timberborn.SettingsSystem">
+      <HintPath>$(ManagedDir)\Timberborn.SettingsSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Timberborn.Modding">
+      <HintPath>$(ManagedDir)\Timberborn.Modding.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- ModSettingsOwner, ModSetting<T>, ModSettingsContext, descriptors. -->
+    <Reference Include="ModSettings.Core">
+      <HintPath>$(ModSettingsDir)\ModSettings.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- RangeIntModSetting (slider widget). -->
+    <Reference Include="ModSettings.Common">
+      <HintPath>$(ModSettingsDir)\ModSettings.Common.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

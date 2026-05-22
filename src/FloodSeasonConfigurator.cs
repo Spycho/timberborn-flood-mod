@@ -18,6 +18,10 @@ namespace Kallikor.FloodSeason;
 internal class FloodSeasonConfigurator : Configurator {
 
     protected override void Configure() {
+        // ModSettingsOwner is ILoadableSingleton — binding as singleton is
+        // what triggers Load(), which registers the settings with Mod
+        // Settings' registry so they appear in the in-game UI.
+        Bind<FloodSeasonSettings>().AsSingleton();
         Bind<FloodSeasonWaterStrengthModifier>().AsTransient();
         MultiBind<TemplateModule>().ToProvider(ProvideTemplateModule).AsSingleton();
     }

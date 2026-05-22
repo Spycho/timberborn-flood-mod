@@ -4,13 +4,12 @@ using UnityEngine;
 namespace Kallikor.FloodSeason;
 
 // IModStarter.StartMod runs once when the game loads our mod, before any
-// scene is active. This is the entry point — equivalent to Main() for a mod.
-// We use it to read settings.json into FloodSeasonSettings before Bindito's
-// game-scene configurator wires up the per-entity modifiers.
+// scene is active. Now that settings live in eMka.ModSettings (loaded by
+// Bindito when FloodSeasonSettings binds as a singleton), the only job
+// left for the entry point is a load confirmation log.
 internal class ModStarter : IModStarter {
 
     public void StartMod(IModEnvironment modEnvironment) {
-        FloodSeasonSettings.Load(modEnvironment.ModPath);
         Debug.Log("[Flood Season] mod loaded");
     }
 
