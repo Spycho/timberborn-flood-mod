@@ -5,6 +5,13 @@ obj/
 # The game loads Code.dll from here, but it's a build artefact — not in git.
 Code.dll
 Code.pdb
+Code.deps.json
+Code.runtimeconfig.json
+Code.runtimeconfig.dev.json
+
+# Project-level Claude Code settings can be committed (see .claude/settings.json)
+# but local overrides aren't.
+.claude/settings.local.json
 
 # IDE
 .vs/

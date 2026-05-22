@@ -36,10 +36,43 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- IModStarter / IModEnvironment — mod entry point. -->
     <Reference Include="Timberborn.ModManagerScene">
       <HintPath>$(ManagedDir)\Timberborn.ModManagerScene.dll</HintPath>
       <Private>false</Private>
     </Reference>
+
+    <!-- Bindito DI container — Configurator, Bind, MultiBind, [Context]. -->
+    <Reference Include="Bindito.Core">
+      <HintPath>$(ManagedDir)\Bindito.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- IWaterStrengthModifier, WaterSource — the seam we extend. -->
+    <Reference Include="Timberborn.WaterSourceSystem">
+      <HintPath>$(ManagedDir)\Timberborn.WaterSourceSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- BaseComponent, IAwakableComponent — component base + Awake hook. -->
+    <Reference Include="Timberborn.BaseComponentSystem">
+      <HintPath>$(ManagedDir)\Timberborn.BaseComponentSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- IInitializableEntity — runs once per entity at spawn time. -->
+    <Reference Include="Timberborn.EntitySystem">
+      <HintPath>$(ManagedDir)\Timberborn.EntitySystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- TemplateModule — wires "add component X to every entity of type Y". -->
+    <Reference Include="Timberborn.TemplateInstantiation">
+      <HintPath>$(ManagedDir)\Timberborn.TemplateInstantiation.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Debug.Log. -->
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
       <Private>false</Private>
