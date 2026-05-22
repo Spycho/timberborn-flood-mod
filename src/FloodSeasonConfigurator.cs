@@ -22,6 +22,12 @@ internal class FloodSeasonConfigurator : Configurator {
         // what triggers Load(), which registers the settings with Mod
         // Settings' registry so they appear in the in-game UI.
         Bind<FloodSeasonSettings>().AsSingleton();
+
+        // One FloodWeather instance per game session. Its constructor
+        // publishes itself to FloodWeather.Instance for the Harmony patch
+        // to read. Game-only — there's no hazardous weather in main menu.
+        Bind<FloodWeather>().AsSingleton();
+
         Bind<FloodSeasonWaterStrengthModifier>().AsTransient();
         MultiBind<TemplateModule>().ToProvider(ProvideTemplateModule).AsSingleton();
     }

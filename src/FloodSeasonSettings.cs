@@ -51,6 +51,22 @@ internal class FloodSeasonSettings : ModSettingsOwner {
             .Create("Badtide flow multiplier (%)")
             .SetTooltip("Scales water source flow during badtide. The game doesn't reduce flow during badtide by default (only contamination), so this is a pure multiplier."));
 
+    public RangeIntModSetting FloodMultiplierPercent { get; } = new RangeIntModSetting(
+        defaultValue: 500,
+        minValue: 100,
+        maxValue: 2000,
+        ModSettingDescriptor
+            .Create("Flood flow multiplier (%)")
+            .SetTooltip("Water source flow during a flood season. Default 500 means 5× normal flow — the player will need to manage the surplus or watch their settlement get washed out."));
+
+    public RangeIntModSetting FloodDurationDays { get; } = new RangeIntModSetting(
+        defaultValue: 3,
+        minValue: 1,
+        maxValue: 10,
+        ModSettingDescriptor
+            .Create("Flood duration (days)")
+            .SetTooltip("How many in-game days a flood season lasts when it occurs."));
+
     public FloodSeasonSettings(
         ISettings settings,
         ModSettingsOwnerRegistry registry,
@@ -63,5 +79,6 @@ internal class FloodSeasonSettings : ModSettingsOwner {
     public float TemperateMultiplier => TemperateMultiplierPercent.Value / 100f;
     public float DroughtMultiplier => DroughtMultiplierPercent.Value / 100f;
     public float BadtideMultiplier => BadtideMultiplierPercent.Value / 100f;
+    public float FloodMultiplier => FloodMultiplierPercent.Value / 100f;
 
 }

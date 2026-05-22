@@ -40,6 +40,9 @@
          We reference DLLs out of the player's subscribed copy rather than
          vendoring them, so we never redistribute a third-party mod. -->
     <ModSettingsDir Condition="'$(ModSettingsDir)' == ''">C:\Program Files (x86)\Steam\steamapps\workshop\content\1062090\3283831040\version-1.0\Scripts</ModSettingsDir>
+    <!-- Steam Workshop folder for the Harmony for Timberborn mod (id 3284904751).
+         Same redistribution rule as the game DLLs: reference but don't copy. -->
+    <HarmonyDir Condition="'$(HarmonyDir)' == ''">C:\Program Files (x86)\Steam\steamapps\workshop\content\1062090\3284904751</HarmonyDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -127,6 +130,14 @@
     <!-- RangeIntModSetting (slider widget). -->
     <Reference Include="ModSettings.Common">
       <HintPath>$(ModSettingsDir)\ModSettings.Common.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Harmony patching library. The game itself doesn't bundle Harmony;
+         we depend on the "Harmony for Timberborn" workshop mod (declared
+         in RequiredMods) which redistributes 0Harmony.dll. -->
+    <Reference Include="0Harmony">
+      <HintPath>$(HarmonyDir)\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

@@ -53,10 +53,10 @@ internal class FloodSeasonWaterStrengthModifier
             return _settings.TemperateMultiplier;
         }
         return _hazardousWeatherService.CurrentCycleHazardousWeather switch {
+            FloodWeather _   => _settings.FloodMultiplier,
             DroughtWeather _ => _settings.DroughtMultiplier,
             BadtideWeather _ => _settings.BadtideMultiplier,
-            // Defensive default — covers any weather type we don't recognise
-            // (including the FloodWeather we'll add in the next commit).
+            // Defensive default for any third-party weather we don't know.
             _ => 1.0f,
         };
     }
