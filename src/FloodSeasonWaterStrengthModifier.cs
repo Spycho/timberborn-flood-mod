@@ -1,5 +1,6 @@
 using Timberborn.BaseComponentSystem;
 using Timberborn.EntitySystem;
+using Timberborn.HazardousWeatherSystem;
 using Timberborn.WaterSourceSystem;
 using Timberborn.WeatherSystem;
 using UnityEngine;
@@ -10,32 +11,31 @@ namespace Kallikor.FloodSeason;
 // decorator wired in FloodSeasonConfigurator. The game multiplies our
 // GetStrengthModifier() return value into the source's flow rate every tick
 // (see WaterSource.UpdateCurrentStrength). The drought modifier shipped
-// with the game uses this same interface to reduce flow during droughts.
+// with the game uses this same interface to reduce flow during droughts —
+// our multiplier composes on top of whatever it returns.
 //
-// Only amplify while the cycle is in its Temperate phase. When IsHazardous-
-// Weather flips true (Drought or Badtide), return 1.0 so the game's own
-// hazardous-weather modifiers (e.g. DroughtWaterStrengthModifier) own the
-// flow behaviour for that phase. Returning the multiplier during a drought
-// would fight the game's intended dry-up.
+// Each weather phase reads its own multiplier from settings so the player
+// can tune each one independently:
+//   Temperate → TemperateMultiplier  (default 2.0×)
+//   Drought   → DroughtMultiplier    (default 1.0× — leave game behaviour alone)
+//   Badtide   → BadtideMultiplier    (default 1.0× — leave game behaviour alone)
 internal class FloodSeasonWaterStrengthModifier
     : BaseComponent, IAwakableComponent, IInitializableEntity, IWaterStrengthModifier {
 
     private readonly WeatherService _weatherService;
+    private readonly HazardousWeatherService _hazardousWeatherService;
     private readonly FloodSeasonSettings _settings;
 
     // Set in Awake, used after — null-forgiving because the framework
     // guarantees Awake runs before InitializeEntity / GetStrengthModifier.
     private WaterSource _waterSource = null!;
 
-    // Bindito injects both services via constructor. WeatherService is a
-    // game-wide singleton; FloodSeasonSettings is our own settings owner,
-    // also bound as singleton — so every modifier on the map reads from
-    // the same instance, and a slider change in the UI propagates to all
-    // water sources on the next tick.
     public FloodSeasonWaterStrengthModifier(
         WeatherService weatherService,
+        HazardousWeatherService hazardousWeatherService,
         FloodSeasonSettings settings) {
         _weatherService = weatherService;
+        _hazardousWeatherService = hazardousWeatherService;
         _settings = settings;
     }
 
@@ -49,7 +49,16 @@ internal class FloodSeasonWaterStrengthModifier
     }
 
     public float GetStrengthModifier() {
-        return _weatherService.IsHazardousWeather ? 1.0f : _settings.CurrentMultiplier;
+        if (!_weatherService.IsHazardousWeather) {
+            return _settings.TemperateMultiplier;
+        }
+        return _hazardousWeatherService.CurrentCycleHazardousWeather switch {
+            DroughtWeather _ => _settings.DroughtMultiplier,
+            BadtideWeather _ => _settings.BadtideMultiplier,
+            // Defensive default — covers any weather type we don't recognise
+            // (including the FloodWeather we'll add in the next commit).
+            _ => 1.0f,
+        };
     }
 
 }

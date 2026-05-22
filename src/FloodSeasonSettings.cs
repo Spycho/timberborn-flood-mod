@@ -13,26 +13,43 @@ namespace Kallikor.FloodSeason;
 // ModSettingsOwner is ILoadableSingleton, so Bindito calls Load() once the
 // configurator binds us. Persistence routes through Timberborn.ISettings
 // (a PlayerPrefs wrapper) keyed on "ModSetting.{ModId}.{ClassName}.{Prop}".
+//
+// All multipliers are stored as integer percent (200 = 2.0×) because the
+// Mod Settings library only ships a slider widget for ints. The
+// convenience accessors below convert to float at read time.
 internal class FloodSeasonSettings : ModSettingsOwner {
 
     protected override string ModId => "Kallikor.FloodSeason";
 
-    // ChangeableOn controls *where* the slider is interactive. Including
-    // Game means players can crank the multiplier mid-save and see flow
-    // adjust the next tick — no restart, no reload.
+    // ChangeableOn controls *where* sliders are interactive. Including
+    // Game means players can drag mid-save and see flow adjust on the
+    // next tick — no restart, no reload.
     public override ModSettingsContext ChangeableOn =>
         ModSettingsContext.MainMenu | ModSettingsContext.Game;
 
-    // Stored as integer percent (200 = 2.0x) because the Mod Settings
-    // library only ships a slider widget for ints (RangeIntModSetting).
-    // The modifier divides by 100 at read time.
-    public RangeIntModSetting MultiplierPercent { get; } = new RangeIntModSetting(
+    public RangeIntModSetting TemperateMultiplierPercent { get; } = new RangeIntModSetting(
         defaultValue: 200,
         minValue: 10,
         maxValue: 1000,
         ModSettingDescriptor
-            .Create("Wet season flow multiplier (%)")
-            .SetTooltip("During the Temperate phase, water sources emit at this percentage of their normal strength. 200 means 2× flow. Set to 100 to disable the mod's effect."));
+            .Create("Temperate flow multiplier (%)")
+            .SetTooltip("Water source flow during the Temperate (non-hazardous) phase. 200 means 2× normal flow."));
+
+    public RangeIntModSetting DroughtMultiplierPercent { get; } = new RangeIntModSetting(
+        defaultValue: 100,
+        minValue: 10,
+        maxValue: 500,
+        ModSettingDescriptor
+            .Create("Drought flow multiplier (%)")
+            .SetTooltip("Stacks on top of the game's natural drought dry-up. 100 leaves drought untouched; 200 makes drought half as severe; 50 makes it twice as harsh."));
+
+    public RangeIntModSetting BadtideMultiplierPercent { get; } = new RangeIntModSetting(
+        defaultValue: 100,
+        minValue: 10,
+        maxValue: 500,
+        ModSettingDescriptor
+            .Create("Badtide flow multiplier (%)")
+            .SetTooltip("Scales water source flow during badtide. The game doesn't reduce flow during badtide by default (only contamination), so this is a pure multiplier."));
 
     public FloodSeasonSettings(
         ISettings settings,
@@ -41,8 +58,10 @@ internal class FloodSeasonSettings : ModSettingsOwner {
         : base(settings, registry, modRepository) {
     }
 
-    // Convenience accessor so the modifier doesn't have to know about the
-    // percent-to-multiplier conversion.
-    public float CurrentMultiplier => MultiplierPercent.Value / 100f;
+    // Convenience accessors so the modifier doesn't have to know about
+    // the percent-to-multiplier conversion at every call site.
+    public float TemperateMultiplier => TemperateMultiplierPercent.Value / 100f;
+    public float DroughtMultiplier => DroughtMultiplierPercent.Value / 100f;
+    public float BadtideMultiplier => BadtideMultiplierPercent.Value / 100f;
 
 }

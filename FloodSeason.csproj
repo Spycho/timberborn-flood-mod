@@ -86,6 +86,13 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- HazardousWeatherService.CurrentCycleHazardousWeather plus the
+         DroughtWeather / BadtideWeather types we type-check against. -->
+    <Reference Include="Timberborn.HazardousWeatherSystem">
+      <HintPath>$(ManagedDir)\Timberborn.HazardousWeatherSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- TickableComponent — base class of WaterSource. The compiler walks
          WaterSource's full inheritance chain to verify our GetComponent<> call,
          so we need this transitive reference even though we never name it. -->
