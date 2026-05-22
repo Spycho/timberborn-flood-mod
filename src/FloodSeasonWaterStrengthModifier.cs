@@ -14,11 +14,14 @@ namespace Kallikor.FloodSeason;
 // with the game uses this same interface to reduce flow during droughts —
 // our multiplier composes on top of whatever it returns.
 //
-// Each weather phase reads its own multiplier from settings so the player
-// can tune each one independently:
-//   Temperate → TemperateMultiplier  (default 2.0×)
-//   Drought   → DroughtMultiplier    (default 1.0× — leave game behaviour alone)
-//   Badtide   → BadtideMultiplier    (default 1.0× — leave game behaviour alone)
+// Each weather phase reads its own knob from settings:
+//   Temperate → TemperateMultiplier (multiplicative; default 2.0×)
+//   Drought   → handled by a Harmony patch on the game's own
+//               DroughtWaterStrengthModifier (additive floor; see
+//               DroughtFloorPatch). This modifier returns 1.0 during
+//               drought because the patch is doing the work.
+//   Badtide   → BadtideMultiplier   (multiplicative; default 1.0×)
+//   Flood     → FloodMultiplier     (multiplicative; default 5.0×)
 internal class FloodSeasonWaterStrengthModifier
     : BaseComponent, IAwakableComponent, IInitializableEntity, IWaterStrengthModifier {
 
@@ -54,9 +57,10 @@ internal class FloodSeasonWaterStrengthModifier
         }
         return _hazardousWeatherService.CurrentCycleHazardousWeather switch {
             FloodWeather _   => _settings.FloodMultiplier,
-            DroughtWeather _ => _settings.DroughtMultiplier,
             BadtideWeather _ => _settings.BadtideMultiplier,
-            // Defensive default for any third-party weather we don't know.
+            // Drought is owned by DroughtFloorPatch (additive bonus on
+            // top of the game's own DroughtWaterStrengthModifier); we
+            // return 1.0 here so we don't double-modify it.
             _ => 1.0f,
         };
     }

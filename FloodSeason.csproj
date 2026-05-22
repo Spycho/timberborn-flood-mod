@@ -96,6 +96,13 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- HazardousWeatherUIHelper + DroughtWeatherUISpecification — the
+         vanilla UI types the WeatherUIHelperPatch interacts with. -->
+    <Reference Include="Timberborn.HazardousWeatherSystemUI">
+      <HintPath>$(ManagedDir)\Timberborn.HazardousWeatherSystemUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- TickableComponent — base class of WaterSource. The compiler walks
          WaterSource's full inheritance chain to verify our GetComponent<> call,
          so we need this transitive reference even though we never name it. -->
