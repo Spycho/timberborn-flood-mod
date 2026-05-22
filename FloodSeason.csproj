@@ -121,6 +121,27 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- IPostLoadableSingleton (lifecycle hook that runs after every
+         ILoadableSingleton.Load). -->
+    <Reference Include="Timberborn.SingletonSystem">
+      <HintPath>$(ManagedDir)\Timberborn.SingletonSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- ISaveableSingleton, ISingletonSaver/Loader, SingletonKey — the
+         per-save singleton-keyed persistence channel. -->
+    <Reference Include="Timberborn.WorldPersistence">
+      <HintPath>$(ManagedDir)\Timberborn.WorldPersistence.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- PropertyKey<T>, IObjectSaver/Loader — the typed key-value
+         primitives the WorldPersistence singletons store under. -->
+    <Reference Include="Timberborn.Persistence">
+      <HintPath>$(ManagedDir)\Timberborn.Persistence.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- ModSettingsOwner, ModSetting<T>, ModSettingsContext, descriptors. -->
     <Reference Include="ModSettings.Core">
       <HintPath>$(ModSettingsDir)\ModSettings.Core.dll</HintPath>

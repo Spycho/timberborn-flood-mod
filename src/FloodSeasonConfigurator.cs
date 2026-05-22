@@ -28,6 +28,12 @@ internal class FloodSeasonConfigurator : Configurator {
         // to read. Game-only — there's no hazardous weather in main menu.
         Bind<FloodWeather>().AsSingleton();
 
+        // Save/load preservation of the active-flood bit. Implements
+        // both ISaveableSingleton (Save() called when the game writes a
+        // save) and IPostLoadableSingleton (PostLoad() called after the
+        // vanilla HazardousWeatherService.Load() has run).
+        Bind<FloodWeatherStatePersistence>().AsSingleton();
+
         Bind<FloodSeasonWaterStrengthModifier>().AsTransient();
         MultiBind<TemplateModule>().ToProvider(ProvideTemplateModule).AsSingleton();
     }
