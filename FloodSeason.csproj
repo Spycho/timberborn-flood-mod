@@ -72,6 +72,13 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- WeatherService — exposes IsHazardousWeather so we know when we're
+         in the Temperate phase (the "wet season" we're amplifying). -->
+    <Reference Include="Timberborn.WeatherSystem">
+      <HintPath>$(ManagedDir)\Timberborn.WeatherSystem.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- Debug.Log. -->
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
