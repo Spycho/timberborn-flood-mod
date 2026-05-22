@@ -1,0 +1,30 @@
+<Project>
+
+  <!--
+    Relocate MSBuild intermediate (obj/) and final (bin/) output OUTSIDE
+    the mod folder. Timberborn's mod loader does
+
+        GetFiles("*.dll", SearchOption.AllDirectories)
+
+    on the mod folder at load time, so anything left under bin/ or obj/
+    here would be loaded as a *second* copy of Code.dll. That makes the
+    game discover every IModStarter and every Bindito Configurator
+    twice, which in turn instantiates and registers our settings owner
+    twice — and the in-game Mod Settings panel would show duplicate
+    sliders.
+
+    This file is loaded by MSBuild *before* Microsoft.Common.props is
+    imported (the csproj's <PropertyGroup> would be too late, which is
+    what the MSB3539 warning is about). Setting the paths here means
+    NuGet, Restore, and Build all agree on where to put their bits.
+
+    Path resolves to Documents\Timberborn\.flood-season-build\ — two
+    levels above the mod folder, outside the Mods\* scan radius.
+  -->
+
+  <PropertyGroup>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)..\..\.flood-season-build\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\.flood-season-build\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+</Project>

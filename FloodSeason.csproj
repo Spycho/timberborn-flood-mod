@@ -19,11 +19,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <!-- Default OutputPath (bin\Debug\netstandard2.1\) — a CopyToModRoot
-         target below copies Code.dll up to the project root after build,
-         where the game actually loads it from. We do NOT set OutputPath
-         to the project root directly: that makes the SDK exclude every
-         .cs file in the project from compilation, producing an empty DLL. -->
+    <!-- bin/ and obj/ are relocated outside the mod folder by
+         Directory.Build.props next to this file. See that file for the
+         reason — short version: Timberborn loads every .dll under the
+         mod folder recursively, so leaving build output here causes
+         duplicate-assembly loads. -->
+
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 
     <!-- Embed the PDB inside Code.dll so stack traces show line numbers
