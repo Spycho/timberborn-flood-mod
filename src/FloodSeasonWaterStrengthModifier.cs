@@ -20,8 +20,6 @@ namespace Kallikor.FloodSeason;
 internal class FloodSeasonWaterStrengthModifier
     : BaseComponent, IAwakableComponent, IInitializableEntity, IWaterStrengthModifier {
 
-    private const float Multiplier = 2.0f;
-
     private readonly WeatherService _weatherService;
 
     // Set in Awake, used after — null-forgiving because the framework
@@ -45,7 +43,7 @@ internal class FloodSeasonWaterStrengthModifier
     }
 
     public float GetStrengthModifier() {
-        return _weatherService.IsHazardousWeather ? 1.0f : Multiplier;
+        return _weatherService.IsHazardousWeather ? 1.0f : FloodSeasonSettings.Multiplier;
     }
 
 }
