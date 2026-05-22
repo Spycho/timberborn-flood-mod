@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Flood Season — Timberborn behaviour mod.
+
+    Output is a single Code.dll in this directory; the game loads it
+    automatically because this folder lives under Documents\Timberborn\Mods.
+    Game DLLs are referenced but not copied (Private=false) — they exist
+    in the player's install and we must not redistribute them.
+
+    GameDir defaults to the standard Steam install path on Windows.
+    Override at build time with: dotnet build -p:GameDir="D:\Path\To\Timberborn"
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Code</AssemblyName>
+    <RootNamespace>Kallikor.FloodSeason</RootNamespace>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Build straight into the mod folder so the game can pick it up. -->
+    <OutputPath>$(MSBuildProjectDirectory)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+
+    <!-- Embed the PDB inside Code.dll so stack traces show line numbers
+         without us shipping a separate Code.pdb. -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Timberborn</GameDir>
+    <ManagedDir>$(GameDir)\Timberborn_Data\Managed</ManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Timberborn.ModManagerScene">
+      <HintPath>$(ManagedDir)\Timberborn.ModManagerScene.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
