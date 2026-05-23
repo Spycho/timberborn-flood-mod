@@ -21,10 +21,18 @@ namespace Kallikor.FloodSeason.Patches;
 // the type by its full name at runtime, side-stepping the access check.
 //
 // We use ___fieldName parameter injection to read the patched object's
-// private _hazardousWeatherService field — that lets us check we're
-// actually in a drought rather than badtide/flood (the game's modifier
-// returns 1.0 in those cases and we don't want our additive bonus
-// raising flow above normal then).
+// private fields — that lets us check we're actually in a drought
+// rather than badtide/flood (the game's modifier returns 1.0 in those
+// cases and we don't want our additive bonus raising flow above normal
+// then).
+//
+// Harmony's convention strips exactly three leading underscores from
+// the parameter name and looks up the result as a field name (see
+// MethodCreatorTools.EmitCallParameter: realName.Substring("___".Length)
+// then AccessTools.Field(declaringType, text)). The game's fields are
+// named "_hazardousWeatherService" — leading underscore included — so
+// our parameters need FOUR underscores total: ___ prefix + the
+// field's full name (which itself starts with _).
 [HarmonyPatch("Timberborn.WaterSourceSystem.DroughtWaterStrengthModifier",
               "GetStrengthModifier")]
 internal static class DroughtFloorPatch {
@@ -32,8 +40,8 @@ internal static class DroughtFloorPatch {
     [HarmonyPostfix]
     public static void Postfix(
         ref float __result,
-        HazardousWeatherService ___hazardousWeatherService,
-        WeatherService ___weatherService) {
+        HazardousWeatherService ____hazardousWeatherService,
+        WeatherService ____weatherService) {
         var settings = FloodSeasonSettings.Instance;
         if (settings == null) {
             return;
@@ -41,10 +49,10 @@ internal static class DroughtFloorPatch {
         // Only inject during an actual drought cycle. Outside drought
         // the game's modifier returns 1.0; raising that above 1 would
         // double-boost flow alongside our own multiplier.
-        if (!___weatherService.IsHazardousWeather) {
+        if (!____weatherService.IsHazardousWeather) {
             return;
         }
-        if (___hazardousWeatherService.CurrentCycleHazardousWeather is not DroughtWeather) {
+        if (____hazardousWeatherService.CurrentCycleHazardousWeather is not DroughtWeather) {
             return;
         }
         __result = Mathf.Clamp01(__result + settings.DroughtAdditive);

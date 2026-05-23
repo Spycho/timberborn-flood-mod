@@ -23,9 +23,14 @@ namespace Kallikor.FloodSeason.Patches;
 // element overlay).
 //
 // We touch three private fields via Harmony's ___fieldName injection:
-//   _hazardousWeatherService    (to check the current weather)
+//   _hazardousWeatherService       (to check the current weather)
 //   _droughtWeatherUISpecification (to read the substitute)
-//   _currentUISpecification     (to write — ref to assign the substitute)
+//   _currentUISpecification        (to write — ref to assign the substitute)
+//
+// Harmony strips exactly three leading underscores from the parameter
+// name and uses the rest as the field name verbatim. The game's fields
+// all carry a leading underscore, so our parameter names need FOUR
+// underscores total (___ + _fieldName).
 //
 // The interface type IHazardousWeatherUISpecification is internal, so
 // we type-erase to `object` for the ref-write — Harmony's field-injection
@@ -35,14 +40,14 @@ internal static class WeatherUIHelperPatch {
 
     [HarmonyPrefix]
     public static bool Prefix(
-        HazardousWeatherService ___hazardousWeatherService,
-        DroughtWeatherUISpecification ___droughtWeatherUISpecification,
-        ref object ___currentUISpecification) {
-        if (___hazardousWeatherService.CurrentCycleHazardousWeather is not FloodWeather) {
+        HazardousWeatherService ____hazardousWeatherService,
+        DroughtWeatherUISpecification ____droughtWeatherUISpecification,
+        ref object ____currentUISpecification) {
+        if (____hazardousWeatherService.CurrentCycleHazardousWeather is not FloodWeather) {
             // Not our weather — let the original method handle drought/badtide.
             return true;
         }
-        ___currentUISpecification = ___droughtWeatherUISpecification;
+        ____currentUISpecification = ____droughtWeatherUISpecification;
         // Skip the original. The hardcoded if/else would otherwise throw
         // because our flood is neither DroughtWeather nor BadtideWeather.
         return false;
