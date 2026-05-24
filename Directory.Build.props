@@ -18,13 +18,26 @@
     what the MSB3539 warning is about). Setting the paths here means
     NuGet, Restore, and Build all agree on where to put their bits.
 
-    Path resolves to Documents\Timberborn\.flood-season-build\ — two
-    levels above the mod folder, outside the Mods\* scan radius.
+    The path MUST be absolute, not relative. An earlier version used
+    $(MSBuildThisFileDirectory)..\..\.flood-season-build\ — which works
+    from the main checkout (resolves to Documents\Timberborn\…) but
+    silently collapses to Mods\Flood Season\.claude\.flood-season-build\
+    when MSBuild runs in a worktree checked out at
+    Mods\Flood Season\.claude\worktrees\<name>\. That puts build output
+    BACK INSIDE the mod folder, which is exactly what this file exists
+    to prevent. Anchoring on $(USERPROFILE) removes the relative-path
+    ambiguity — every checkout (main or worktree) writes to the same
+    out-of-tree location.
+
+    Note: this assumes Documents lives under %USERPROFILE%\Documents\.
+    If the user redirects Documents (OneDrive, custom path), override
+    on the build line with -p:FloodSeasonBuildRoot=…\.flood-season-build.
   -->
 
   <PropertyGroup>
-    <BaseOutputPath>$(MSBuildThisFileDirectory)..\..\.flood-season-build\bin\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\..\.flood-season-build\obj\</BaseIntermediateOutputPath>
+    <FloodSeasonBuildRoot Condition="'$(FloodSeasonBuildRoot)' == ''">$(USERPROFILE)\Documents\Timberborn\.flood-season-build</FloodSeasonBuildRoot>
+    <BaseOutputPath>$(FloodSeasonBuildRoot)\bin\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(FloodSeasonBuildRoot)\obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
 </Project>

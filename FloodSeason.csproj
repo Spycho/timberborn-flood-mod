@@ -196,8 +196,20 @@
   </ItemGroup>
 
   <!-- After every build, copy the freshly-built Code.dll up to the mod
-       folder so the game can load it without a manual copy step. -->
-  <Target Name="CopyToModRoot" AfterTargets="Build">
+       folder so the game can load it without a manual copy step.
+
+       SKIPPED when MSBuildProjectDirectory is under a `.claude/` folder
+       (i.e. building from a Claude Code worktree at
+       Mods/Flood Season/.claude/worktrees/<name>/). Worktree builds
+       would otherwise drop Code.dll INSIDE the mod folder, which the
+       game's recursive DLL scan then loads as an extra assembly copy —
+       causing every IModStarter and Configurator to register twice
+       (per copy), every Harmony patch to apply twice, and lifecycle
+       singletons to compete. Worktrees still produce a Code.dll under
+       FloodSeasonBuildRoot (outside the mod folder) for testing, just
+       not next to the manifest. -->
+  <Target Name="CopyToModRoot" AfterTargets="Build"
+          Condition="!$(MSBuildProjectDirectory.Contains('.claude'))">
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(MSBuildProjectDirectory)" />
   </Target>
 
