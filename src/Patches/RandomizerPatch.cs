@@ -29,9 +29,11 @@ internal static class RandomizerPatch {
             return;
         }
         if (!settings.FloodSeasonEnabled.Value) {
+            Debug.Log($"[Flood Season] cycle {cycle}: feature off, keeping vanilla {__result?.Id}");
             return;
         }
         if (cycle <= settings.FloodGraceCycles.Value) {
+            Debug.Log($"[Flood Season] cycle {cycle}: within grace ({settings.FloodGraceCycles.Value}), keeping vanilla {__result?.Id}");
             return;
         }
         // Random.value is a uniform [0, 1] float; scaling to percent keeps
@@ -40,8 +42,10 @@ internal static class RandomizerPatch {
         // IRandomNumberGenerator. Saves are therefore not deterministic for
         // flood occurrences — acceptable, we're not aiming for replay parity.
         if (Random.value * 100f > settings.FloodProbabilityPercent.Value) {
+            Debug.Log($"[Flood Season] cycle {cycle}: probability roll missed");
             return;
         }
+        Debug.Log($"[Flood Season] cycle {cycle}: replacing vanilla {__result?.Id} with flood");
         __result = flood;
     }
 

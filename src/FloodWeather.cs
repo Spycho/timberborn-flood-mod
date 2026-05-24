@@ -12,16 +12,27 @@ namespace Kallikor.FloodSeason;
 // The constructor also publishes a static Instance for the Harmony patch
 // to grab — patches are static methods and can't take DI.
 //
-// The Id string is what HazardousWeatherHistory keys on; it stays stable
-// across save/load so the game can track "how many flood seasons have
-// occurred". Don't change this casually.
+// IMPORTANT: Id returns "DroughtWeather" — the SAME string as the game's
+// own DroughtWeather. That spoof side-steps every id-based lookup in
+// vanilla code that would otherwise throw on an unknown id. Notably:
+//   • Sun.GetFogSettings (string id → FogSettingsSpec dictionary lookup)
+//     would throw "Weather fog settings not found" — the blueprint data
+//     ships fogs only for "DroughtWeather" and "BadtideWeather".
+//   • Any future id-keyed lookup in mods or DLC.
+// Type-based dispatch (`is FloodWeather` vs `is DroughtWeather`) still
+// works correctly because that uses C# type identity, not the string.
+// Our own modifier and save-restore logic uses type checks, so it can
+// still tell flood and drought apart.
+// Side effect: HazardousWeatherHistory.GetCyclesCount("DroughtWeather")
+// counts our floods alongside actual droughts, which affects vanilla
+// drought's handicap math very mildly. Acceptable for now.
 internal class FloodWeather : IHazardousWeather {
 
     public static FloodWeather? Instance { get; private set; }
 
     private readonly FloodSeasonSettings _settings;
 
-    public string Id => "Kallikor.FloodWeather";
+    public string Id => "DroughtWeather";
 
     public FloodWeather(FloodSeasonSettings settings) {
         _settings = settings;
