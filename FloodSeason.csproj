@@ -96,6 +96,14 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- IRandomNumberGenerator — the game's seeded RNG, injected into
+         FloodWeather to pick a random duration in [min, max] the same
+         way vanilla BadtideWeather/DroughtWeather do. -->
+    <Reference Include="Timberborn.Common">
+      <HintPath>$(ManagedDir)\Timberborn.Common.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- HazardousWeatherUIHelper + DroughtWeatherUISpecification — the
          vanilla UI types the WeatherUIHelperPatch interacts with. -->
     <Reference Include="Timberborn.HazardousWeatherSystemUI">

@@ -1,3 +1,4 @@
+using Timberborn.Common;
 using Timberborn.HazardousWeatherSystem;
 
 namespace Kallikor.FloodSeason;
@@ -31,11 +32,13 @@ internal class FloodWeather : IHazardousWeather, Timberborn.SingletonSystem.ILoa
     public static FloodWeather? Instance { get; private set; }
 
     private readonly FloodSeasonSettings _settings;
+    private readonly IRandomNumberGenerator _randomNumberGenerator;
 
     public string Id => "DroughtWeather";
 
-    public FloodWeather(FloodSeasonSettings settings) {
+    public FloodWeather(FloodSeasonSettings settings, IRandomNumberGenerator randomNumberGenerator) {
         _settings = settings;
+        _randomNumberGenerator = randomNumberGenerator;
         Instance = this;
         UnityEngine.Debug.Log("[Flood Season] FloodWeather constructed; Instance set");
     }
@@ -49,12 +52,26 @@ internal class FloodWeather : IHazardousWeather, Timberborn.SingletonSystem.ILoa
     public void Load() {
     }
 
-    // The game's own Drought/Badtide use this to scale duration with a
-    // handicap multiplier (shorter on early occurrences, longer later).
-    // We just take the duration straight from settings — predictability
-    // is more useful here than handicap math.
+    // Mirrors how BadtideWeather/DroughtWeather pick a duration: roll a
+    // uniform float in [min, max] and round to the nearest day. We skip
+    // the vanilla handicap multiplier (shorter on early cycles, longer
+    // later) — it's a knob we don't expose, and a predictable range is
+    // easier to reason about while tuning.
+    //
+    // IRandomNumberGenerator.Range(float, float) is inclusive on both
+    // ends, matching the variable names in BadtideWeather.cs.
+    // Clamp min into [0, max] so a user typo (min > max) collapses to a
+    // single-value range instead of throwing inside Range().
     public int GetDurationAtCycle(int cycle) {
-        return _settings.FloodDurationDays.Value;
+        int min = System.Math.Max(0, _settings.FloodDurationMinDays.Value);
+        int max = System.Math.Max(min, _settings.FloodDurationMaxDays.Value);
+        int duration = (int)System.Math.Round(
+            _randomNumberGenerator.Range((float)min, (float)max),
+            System.MidpointRounding.AwayFromZero);
+        if (min > 0) {
+            duration = System.Math.Max(duration, 1);
+        }
+        return duration;
     }
 
 }
