@@ -31,11 +31,20 @@ internal class FloodWeather : IHazardousWeather, Timberborn.SingletonSystem.ILoa
     public static FloodWeather? Instance { get; private set; }
 
     private readonly FloodSeasonSettings _settings;
+    private readonly HazardousWeatherService _hazardousWeatherService;
 
     public string Id => "DroughtWeather";
 
-    public FloodWeather(FloodSeasonSettings settings) {
+    // Convenience for art-overlay patches that need to know whether to
+    // swap to flood textures. Cheaper and easier than rebinding
+    // HazardousWeatherService into every patch via field injection.
+    public bool IsCurrent =>
+        _hazardousWeatherService.CurrentCycleHazardousWeather is FloodWeather;
+
+    public FloodWeather(FloodSeasonSettings settings,
+                        HazardousWeatherService hazardousWeatherService) {
         _settings = settings;
+        _hazardousWeatherService = hazardousWeatherService;
         Instance = this;
         UnityEngine.Debug.Log("[Flood Season] FloodWeather constructed; Instance set");
     }

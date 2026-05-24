@@ -17,6 +17,12 @@ namespace Kallikor.FloodSeason;
 internal class ModStarter : IModStarter {
 
     public void StartMod(IModEnvironment modEnvironment) {
+        // Stash the mod folder path for FloodArt to find the PNGs.
+        // ModPath is the absolute path to this mod's directory; PNGs
+        // sit in <ModPath>/assets/. Patches access them via FloodArt's
+        // static accessors (patches are static methods and can't take DI).
+        FloodArt.ModPath = modEnvironment.ModPath;
+
         new Harmony("Kallikor.FloodSeason").PatchAll();
         Debug.Log("[Flood Season] mod loaded");
     }
