@@ -2,7 +2,7 @@ using HarmonyLib;
 using Timberborn.ModManagerScene;
 using UnityEngine;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // IModStarter.StartMod runs once when the game loads our mod, before any
 // scene is active. Two jobs:
@@ -23,7 +23,7 @@ internal class ModStarter : IModStarter {
         // static accessors (patches are static methods and can't take DI).
         FloodArt.ModPath = modEnvironment.ModPath;
 
-        new Harmony("Kallikor.FloodSeason").PatchAll();
+        new Harmony("Spycho.FloodSeason").PatchAll();
         Debug.Log("[Flood Season] mod loaded");
     }
 

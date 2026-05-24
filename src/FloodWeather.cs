@@ -1,7 +1,7 @@
 using Timberborn.Common;
 using Timberborn.HazardousWeatherSystem;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // A new IHazardousWeather implementation, slotted into the same selection
 // slot the game uses for Drought and Badtide. Discovered by the Harmony

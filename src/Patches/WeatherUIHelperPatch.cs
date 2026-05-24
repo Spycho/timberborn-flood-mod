@@ -2,7 +2,7 @@ using HarmonyLib;
 using Timberborn.HazardousWeatherSystem;
 using Timberborn.HazardousWeatherSystemUI;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Stops a crash when our FloodWeather becomes the active hazardous weather.
 //

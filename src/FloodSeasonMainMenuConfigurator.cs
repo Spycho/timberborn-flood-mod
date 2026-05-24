@@ -1,6 +1,6 @@
 using Bindito.Core;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Bindito uses a separate container per context (MainMenu, Game, MapEditor).
 // FloodSeasonConfigurator only registers in Game, but we want the settings

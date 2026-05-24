@@ -1,7 +1,7 @@
 using HarmonyLib;
 using Timberborn.HazardousWeatherSystem;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // HazardousWeatherSoundPlayer.OnHazardousWeatherStarted is another
 // hardcoded if/else that throws on unknown weather types:

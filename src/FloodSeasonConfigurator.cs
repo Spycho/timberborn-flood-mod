@@ -2,7 +2,7 @@ using Bindito.Core;
 using Timberborn.TemplateInstantiation;
 using Timberborn.WaterSourceSystem;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Bindito (the game's DI container) auto-discovers this class because of the
 // [Context("Game")] attribute, then calls Configure() during in-game scene

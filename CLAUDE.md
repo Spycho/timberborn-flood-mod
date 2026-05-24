@@ -59,7 +59,7 @@ The game's `HazardousWeatherRandomizer.GetRandomWeatherForCycle` is a hardcoded 
 
 ### Entry point
 
-`src/ModStarter.cs` implements `IModStarter` from `Timberborn.ModManagerScene`. The game discovers it via reflection (`AssemblyLoad → GetTypes() → IsAssignableFrom(IModStarter)`). It calls `new Harmony("Kallikor.FloodSeason").PatchAll()` to apply every `[HarmonyPatch]` in the assembly. Without this call, the patch attributes are inert.
+`src/ModStarter.cs` implements `IModStarter` from `Timberborn.ModManagerScene`. The game discovers it via reflection (`AssemblyLoad → GetTypes() → IsAssignableFrom(IModStarter)`). It calls `new Harmony("Spycho.FloodSeason").PatchAll()` to apply every `[HarmonyPatch]` in the assembly. Without this call, the patch attributes are inert.
 
 ## Critical gotchas
 

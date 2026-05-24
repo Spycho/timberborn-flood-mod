@@ -1,7 +1,7 @@
 using HarmonyLib;
 using UnityEngine.UIElements;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Overrides the top-right date-panel icon to the flood texture during a flood.
 //
