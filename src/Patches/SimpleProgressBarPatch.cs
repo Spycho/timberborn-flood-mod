@@ -5,49 +5,53 @@ using UnityEngine.UIElements;
 
 namespace Spycho.FloodSeason.Patches;
 
-// Wins the race against Unity's custom-style resolver for the weather
-// panel's progress bar.
+// Overrides the SimpleProgressBar's mesh-fill sprite to flood during
+// the APPROACHING phase of a flood cycle.
 //
-// SimpleProgressBar reads its draw sprite from a private _image field,
-// which is populated by a CustomStyleProperty<string> "--background-
-// image" resolved via Resources.Load<Sprite>(value):
+// SimpleProgressBar's draw is a custom mesh:
 //
-//     private void OnCustomStyleResolved(CustomStyleResolvedEvent e) {
-//         _image = customStyle.TryGetValue(...) ? Resources.Load<Sprite>(...) : null;
+//     private Sprite _image;
+//     private void OnCustomStyleResolved(...) {
+//         _image = customStyle.TryGetValue(BackgroundImageProperty, ...)
+//             ? Resources.Load<Sprite>(value) : null;
+//     }
+//     private void OnGenerateVisualContent(MeshGenerationContext mgc) {
+//         meshWriter.StartWriting(mgc, _image.texture);
+//         WriteMesh(...);  // reveals more of _image left-to-right as _progress grows
 //     }
 //
-// Because WeatherUIHelperPatch substitutes the drought UI spec into
-// HazardousWeatherUIHelper, the weather panel's root gets the
-// "weather-panel--dry" class, and Unity's CSS pipeline resolves the
-// custom property to the drought sprite path. The bar then draws the
-// drought texture via OnGenerateVisualContent.
+// The _image is loaded from a CustomStyleProperty<string>
+// "--background-image" that the (drought-spoofed) USS class resolves
+// to a Resources sprite path.
 //
-// WeatherPanelBackgroundPatch (postfix on WeatherPanel.UpdatePanel) was
-// supposed to override _image with our flood sprite. It didn't work
-// because custom-style resolution is DEFERRED — UpdatePanel's
-// Remove+AddToClassList marks the element dirty, UpdatePanel returns,
-// our postfix sets _image to flood, then Unity processes the queued
-// resolution and OnCustomStyleResolved fires, overwriting _image back
-// to drought before the next repaint. Drought wins every frame.
+// During the in-progress phase, vanilla's CSS sets _image to the
+// TEMPERATE sprite — narratively "this is what the bar fills towards
+// as the hazard ends" — and we leave that alone
+// (WeatherPanelBackgroundPatch handles the hazard-backdrop swap).
 //
-// This patch postfixes OnCustomStyleResolved itself, so our override
-// runs AFTER vanilla writes _image. Whichever order Unity flushes
-// resolutions in, our value is the last write into _image before the
-// next repaint reads it.
+// During the approaching phase, vanilla sets _image to the HAZARD
+// sprite (drought, after our spec spoof) — narratively "this is what
+// the bar fills towards as the hazard arrives". For flood-themed
+// continuity we want a flood sprite here instead.
 //
-// SCOPE: we only override progress bars whose ancestor chain has a
-// class containing "weather-panel" — without that gate, every progress
-// bar in the game (manufactory throughput, science, etc.) would render
-// the flood texture during a flood. The walk is bounded by depth so a
-// runaway ancestry tree doesn't eat the frame.
+// Why we postfix OnCustomStyleResolved instead of overriding from
+// WeatherPanel.UpdatePanel: Unity's custom-style resolution is
+// DEFERRED. UpdatePanel's Remove+AddToClassList queues a style
+// invalidation, UpdatePanel returns, and only then does Unity flush
+// the resolution and fire OnCustomStyleResolved, which overwrites
+// whatever _image we just set. Postfixing the resolver itself
+// guarantees our override is the last write into _image before the
+// next repaint.
 //
-// SimpleProgressBar is public, so we can patch by typeof rather than a
-// string name. OnCustomStyleResolved is private; AccessTools resolves
-// it via reflection regardless.
+// SCOPE: only override bars whose ancestor chain has "weather-
+// approaching". The walk stops early if "weather-in-progress" is seen
+// first — that means we're an in-progress bar (vanilla _image is
+// temperate, correct, leave it). If neither class is found within the
+// walk depth, the bar isn't a weather panel bar at all (could be
+// manufactory throughput, science, etc.) and we leave it alone.
 [HarmonyPatch(typeof(SimpleProgressBar), "OnCustomStyleResolved")]
 internal static class SimpleProgressBarPatch {
 
-    private const string WeatherPanelMarker = "weather-panel";
     private const int MaxAncestorWalk = 10;
 
     private static readonly FieldInfo? BarImageField =
@@ -58,7 +62,7 @@ internal static class SimpleProgressBarPatch {
         if (BarImageField == null || __instance == null) {
             return;
         }
-        if (!IsWeatherPanelBar(__instance)) {
+        if (!IsWeatherPanelApproachingBar(__instance)) {
             return;
         }
         var flood = FloodWeather.Instance;
@@ -73,14 +77,21 @@ internal static class SimpleProgressBarPatch {
         __instance.MarkDirtyRepaint();
     }
 
-    private static bool IsWeatherPanelBar(VisualElement bar) {
+    // True iff the bar's ancestor chain reaches a "weather-approaching"
+    // class before either "weather-in-progress" or running out of
+    // ancestors. The approaching/in-progress classes are mutually
+    // exclusive (vanilla UpdateHazardousWeatherClasses adds exactly
+    // one), so seeing in-progress first means the bar is in the
+    // in-progress phase and we shouldn't touch _image.
+    private static bool IsWeatherPanelApproachingBar(VisualElement bar) {
         VisualElement? cursor = bar.parent;
         int depth = 0;
         while (cursor != null && depth < MaxAncestorWalk) {
-            foreach (var cls in cursor.GetClasses()) {
-                if (cls != null && cls.Contains(WeatherPanelMarker)) {
-                    return true;
-                }
+            if (cursor.ClassListContains("weather-approaching")) {
+                return true;
+            }
+            if (cursor.ClassListContains("weather-in-progress")) {
+                return false;
             }
             cursor = cursor.parent;
             depth++;
