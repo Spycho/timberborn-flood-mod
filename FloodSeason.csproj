@@ -125,6 +125,23 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- Texture2D.LoadImage (extension method on Texture2D) — decodes PNG
+         bytes into a runtime texture. Lives in its own module since
+         Unity 2019; CoreModule alone is not enough. -->
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>$(ManagedDir)\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- VisualElement, IStyle, StyleBackground, Background, UQueryExtensions.Q
+         — the UI Toolkit surface our art patches reach into. The game's
+         WeatherSystemUI already references this transitively, but
+         our own patches need to bind to it directly. -->
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>$(ManagedDir)\UnityEngine.UIElementsModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- ISettings is the PlayerPrefs wrapper ModSettingsOwner persists
          through; ModRepository is needed for its constructor too. -->
     <Reference Include="Timberborn.SettingsSystem">
