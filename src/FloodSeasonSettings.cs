@@ -66,11 +66,21 @@ internal class FloodSeasonSettings : ModSettingsOwner {
             .Create("Flood flow multiplier (%)")
             .SetTooltip("Water source flow during a flood season. Default 500 means 5× normal flow."));
 
-    public ModSetting<int> FloodDurationDays { get; } = new ModSetting<int>(
-        defaultValue: 3,
+    // Min/max pair, picked uniformly at random per flood (rounded to the
+    // nearest day). Mirrors the vanilla MinBadtideWeatherDuration /
+    // MaxBadtideWeatherDuration knobs. Range is inclusive on both ends.
+    // If min > max we treat them as both equal to min at read time.
+    public ModSetting<int> FloodDurationMinDays { get; } = new ModSetting<int>(
+        defaultValue: 2,
         ModSettingDescriptor
-            .Create("Flood duration (days)")
-            .SetTooltip("How many in-game days a flood season lasts."));
+            .Create("Flood duration min (days)")
+            .SetTooltip("Lower bound (inclusive) on the number of in-game days a flood season lasts. Each flood rolls a random duration in [min, max]."));
+
+    public ModSetting<int> FloodDurationMaxDays { get; } = new ModSetting<int>(
+        defaultValue: 5,
+        ModSettingDescriptor
+            .Create("Flood duration max (days)")
+            .SetTooltip("Upper bound (inclusive) on the number of in-game days a flood season lasts. Each flood rolls a random duration in [min, max]."));
 
     public ModSetting<bool> FloodSeasonEnabled { get; } = new ModSetting<bool>(
         defaultValue: false,
