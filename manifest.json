@@ -1,6 +1,6 @@
 {
   "Name": "Flood Season",
-  "Version": "0.7.2",
+  "Version": "0.7.3",
   "Id": "Kallikor.FloodSeason",
   "MinimumGameVersion": "1.0.0.0",
   "Description": "Makes wet seasons wetter — multiplies water source flow rate during the Temperate phase by a configurable factor. Multiplier is tunable live from the in-game Mod Settings panel.",

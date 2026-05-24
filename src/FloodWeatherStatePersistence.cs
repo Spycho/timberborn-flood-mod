@@ -15,22 +15,32 @@ namespace Kallikor.FloodSeason;
 // active would load back as Badtide and the flood would vanish. We
 // side-step that by maintaining our own singleton save key.
 //
-// Two-step protocol:
+// Three lifecycle interfaces:
 //
-//   Save:       if the current weather is FloodWeather, write
-//               IsFloodActive=true under our own singleton key. We only
-//               write *true*: absent key means "not a flood", which
-//               keeps non-flood saves identical to pre-mod saves.
+//   ILoadableSingleton (empty Load):
+//       Forces Bindito to eagerly construct this object during the load
+//       phase, which in turn registers it with Timberborn's
+//       SingletonListener (via the [Singleton]-tagged ISaveable/IPostLoad
+//       interfaces). Without this, nothing injects this class, so
+//       Bindito's lazy singleton wouldn't construct it, so Save and
+//       PostLoad would never run.
 //
-//   PostLoad:   runs AFTER every ILoadableSingleton.Load() — including
-//               HazardousWeatherService.Load(), which has just set
-//               CurrentCycleHazardousWeather to drought/badtide from
-//               the vanilla bool. If our key says flood was active, we
-//               force-override the property via AccessTools (its setter
-//               is private). Order matters: this is why we implement
-//               IPostLoadableSingleton rather than ILoadableSingleton.
+//   ISaveableSingleton:
+//       If the current weather is FloodWeather, write IsFloodActive=true
+//       under our own singleton key. We only write *true*: absent key
+//       means "not a flood", keeping non-flood saves identical to pre-mod
+//       saves.
+//
+//   IPostLoadableSingleton:
+//       Runs AFTER every ILoadableSingleton.Load() — including
+//       HazardousWeatherService.Load(), which has just set
+//       CurrentCycleHazardousWeather to drought/badtide from the vanilla
+//       bool. If our key says flood was active, we force-override the
+//       property via AccessTools (its setter is private). Order matters:
+//       this is why we implement IPostLoadableSingleton rather than
+//       ILoadableSingleton for the restore logic.
 internal class FloodWeatherStatePersistence
-    : ISaveableSingleton, IPostLoadableSingleton {
+    : ILoadableSingleton, ISaveableSingleton, IPostLoadableSingleton {
 
     private static readonly SingletonKey FloodSeasonStateKey =
         new SingletonKey("Kallikor.FloodSeason.FloodWeatherState");
@@ -46,37 +56,52 @@ internal class FloodWeatherStatePersistence
         ISingletonLoader singletonLoader) {
         _hazardousWeatherService = hazardousWeatherService;
         _singletonLoader = singletonLoader;
+        Debug.Log("[Flood Season] FloodWeatherStatePersistence constructed");
+    }
+
+    // Empty — only here to force eager construction via Bindito's singleton lifecycle.
+    public void Load() {
     }
 
     public void Save(ISingletonSaver singletonSaver) {
-        if (_hazardousWeatherService.CurrentCycleHazardousWeather is FloodWeather) {
+        var current = _hazardousWeatherService.CurrentCycleHazardousWeather;
+        Debug.Log($"[Flood Season] Save() called, current weather is {current?.GetType().Name ?? "null"} (id={current?.Id})");
+        if (current is FloodWeather) {
             var saver = singletonSaver.GetSingleton(FloodSeasonStateKey);
             saver.Set(IsFloodActiveKey, true);
+            Debug.Log("[Flood Season] wrote IsFloodActive=true to save");
         }
     }
 
     public void PostLoad() {
+        Debug.Log("[Flood Season] PostLoad() called");
         if (!_singletonLoader.TryGetSingleton(FloodSeasonStateKey, out var loader)) {
+            Debug.Log("[Flood Season] PostLoad: no flood-state singleton in save (not a flood save)");
             return;
         }
         if (!loader.Get(IsFloodActiveKey)) {
+            Debug.Log("[Flood Season] PostLoad: flood-state key found but IsFloodActive=false");
             return;
         }
         var flood = FloodWeather.Instance;
         if (flood == null) {
+            Debug.LogWarning("[Flood Season] PostLoad: IsFloodActive=true but FloodWeather.Instance is null — cannot restore");
             return;
         }
         // The property is `public IHazardousWeather CurrentCycleHazardousWeather { get; private set; }`
         // — public getter, private setter. AccessTools.PropertySetter
         // bypasses the access check and returns the setter MethodInfo
-        // even when it's non-public. More robust than reflecting on the
-        // compiler-generated backing field, whose name (`<…>k__BackingField`)
-        // could change if the property gets a custom setter later.
+        // even when it's non-public.
         var setter = AccessTools.PropertySetter(
             typeof(HazardousWeatherService),
             nameof(HazardousWeatherService.CurrentCycleHazardousWeather));
-        setter?.Invoke(_hazardousWeatherService, new object[] { flood });
-        Debug.Log("[Flood Season] restored active flood weather from save");
+        if (setter == null) {
+            Debug.LogWarning("[Flood Season] PostLoad: AccessTools.PropertySetter returned null — cannot restore");
+            return;
+        }
+        setter.Invoke(_hazardousWeatherService, new object[] { flood });
+        var afterSet = _hazardousWeatherService.CurrentCycleHazardousWeather;
+        Debug.Log($"[Flood Season] PostLoad: restored flood. CurrentCycleHazardousWeather is now {afterSet?.GetType().Name} (id={afterSet?.Id})");
     }
 
 }

@@ -26,7 +26,7 @@ namespace Kallikor.FloodSeason;
 // Side effect: HazardousWeatherHistory.GetCyclesCount("DroughtWeather")
 // counts our floods alongside actual droughts, which affects vanilla
 // drought's handicap math very mildly. Acceptable for now.
-internal class FloodWeather : IHazardousWeather {
+internal class FloodWeather : IHazardousWeather, Timberborn.SingletonSystem.ILoadableSingleton {
 
     public static FloodWeather? Instance { get; private set; }
 
@@ -37,6 +37,16 @@ internal class FloodWeather : IHazardousWeather {
     public FloodWeather(FloodSeasonSettings settings) {
         _settings = settings;
         Instance = this;
+        UnityEngine.Debug.Log("[Flood Season] FloodWeather constructed; Instance set");
+    }
+
+    // Empty — implemented so Bindito's singleton lifecycle eagerly
+    // constructs this object during the load phase. Without it, nothing
+    // injects FloodWeather (its only consumer is the static Harmony
+    // patch), and Bindito's lazy AsSingleton means the instance might
+    // never be created. Then FloodWeather.Instance stays null and our
+    // randomizer patch silently no-ops.
+    public void Load() {
     }
 
     // The game's own Drought/Badtide use this to scale duration with a
