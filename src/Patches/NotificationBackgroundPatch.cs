@@ -1,54 +1,60 @@
 using HarmonyLib;
-using Timberborn.HazardousWeatherSystem;
 using UnityEngine.UIElements;
 
 namespace Spycho.FloodSeason.Patches;
 
-// Overrides the "Flood has begun!" banner background to our flood texture.
+// Overrides the big central "X has begun!" / "X is approaching!" banner
+// background to our flood texture during a flood.
 //
-// HazardousWeatherNotificationPanel.OnHazardousWeatherStarted (internal,
-// Timberborn.HazardousWeatherSystemUI) is the [OnEvent] handler that
-// fades in the 757x174 banner whenever a hazardous weather starts. Its
-// private ShowNotification helper adds the
-// NotificationBackgroundClass ("hazardous-weather-notification__background--dry"
-// after our drought-spec substitution) to the Image element named
-// "Background". The vanilla CSS resolves that class to the drought
-// notification artwork.
+// HazardousWeatherNotificationPanel.ShowNotification (private, internal
+// class, Timberborn.HazardousWeatherSystemUI) is the shared chokepoint
+// for every banner the panel fades in. Three call sites reach it:
 //
-// We postfix OnHazardousWeatherStarted: the event payload tells us
-// directly whether the weather that just started is our FloodWeather, so
-// we don't need to round-trip through FloodWeather.IsCurrent. If yes,
-// reach into the private _background field and slap our texture on it
-// via inline style — overrides the class-derived background-image.
+//   • OnHazardousWeatherStarted    → "Flood has begun!"
+//   • UpdateSingleton (approaching)→ "Flood is approaching!"
+//   • OnCycleEndedEvent (temperate)→ "Cycle N begins"
 //
-// We don't bother resetting the inline style on subsequent non-flood
-// notifications because the class machinery + transition animation
-// re-applies the right background-image on each new banner anyway.
+// The first two pass isHazardous=true and add NotificationBackgroundClass
+// ("hazardous-weather-notification__background--dry" after our drought-
+// spec substitution) to the Image element named "Background". The
+// vanilla CSS then resolves that class to the drought artwork. An
+// earlier version of this patch only intercepted OnHazardousWeather-
+// Started, so the *approaching* banner stayed drought-textured even
+// during a flood cycle.
+//
+// Postfixing the shared ShowNotification lets one patch handle both
+// hazardous paths uniformly. Check FloodWeather.IsCurrent rather than
+// the (no-longer-available) event payload: while a flood cycle is
+// active, CurrentCycleHazardousWeather IS FloodWeather, so the same
+// check works for "started" and "approaching" alike.
+//
+// For non-flood hazardous notifications (real drought, real badtide)
+// and the temperate cycle-begin notification, we clear any stale
+// inline override so the vanilla CSS class picks the correct image.
+// Vanilla never sets an inline backgroundImage on _background itself,
+// so clearing is safe — the class-based image always resurfaces.
 [HarmonyPatch("Timberborn.HazardousWeatherSystemUI.HazardousWeatherNotificationPanel",
-              "OnHazardousWeatherStarted")]
+              "ShowNotification")]
 internal static class NotificationBackgroundPatch {
 
     [HarmonyPostfix]
-    public static void Postfix(
-            HazardousWeatherStartedEvent hazardousWeatherStartedEvent,
-            Image ____background) {
-        if (hazardousWeatherStartedEvent.HazardousWeather is not FloodWeather) {
-            // For drought/badtide, the vanilla CSS class is correct.
-            // Clear any stale inline override left over from a previous
-            // flood so the new banner displays the right texture.
-            if (____background != null) {
-                ____background.style.backgroundImage = StyleKeyword.Null;
-            }
-            return;
-        }
+    public static void Postfix(bool isHazardous, Image ____background) {
         if (____background == null) {
             return;
         }
-        var bg = FloodArt.NotificationBackground;
-        if (!bg.HasValue) {
-            return;
+        if (isHazardous && FloodWeather.Instance is { IsCurrent: true }) {
+            var bg = FloodArt.NotificationBackground;
+            if (bg.HasValue) {
+                ____background.style.backgroundImage = new StyleBackground(bg.Value);
+                return;
+            }
+            // PNG missing — fall through to clearing so the vanilla CSS
+            // class shows through rather than rendering nothing.
         }
-        ____background.style.backgroundImage = new StyleBackground(bg.Value);
+        // Not a flood-themed notification (or asset missing). Clear any
+        // stale inline override so the class-driven CSS background-image
+        // resolves correctly (drought, badtide, or wet-weather).
+        ____background.style.backgroundImage = StyleKeyword.Null;
     }
 
 }

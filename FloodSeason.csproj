@@ -142,6 +142,23 @@
       <Private>false</Private>
     </Reference>
 
+    <!-- GameMusicPlayer — MusicPlayerEndedPatch prefix-skips its
+         HazardousWeatherEnded handler when our flood-restore PostLoad
+         posts a fake EndedEvent (otherwise music switches to standard
+         and we get two tracks on top of each other). -->
+    <Reference Include="Timberborn.GameSound">
+      <HintPath>$(ManagedDir)\Timberborn.GameSound.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- SimpleProgressBar — WeatherPanelBackgroundPatch reaches into
+         the bar's private _image (Sprite) field to substitute the
+         flood texture for the drought one during a flood. -->
+    <Reference Include="Timberborn.CoreUI">
+      <HintPath>$(ManagedDir)\Timberborn.CoreUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
     <!-- ISettings is the PlayerPrefs wrapper ModSettingsOwner persists
          through; ModRepository is needed for its constructor too. -->
     <Reference Include="Timberborn.SettingsSystem">

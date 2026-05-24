@@ -26,11 +26,18 @@ internal static class FloodArt {
     private const string IconRelative         = "assets/flood-icon.png";
     private const string NotificationRelative = "assets/flood-notification.png";
 
-    // Both fields cached lazily on first use. Each Background instance
-    // wraps a Texture2D that we keep around via HideFlags.HideAndDontSave
-    // so Unity doesn't garbage-collect it between scenes.
+    // Cached lazily on first use. Each Background instance wraps a
+    // Texture2D that we keep around via HideFlags.HideAndDontSave so
+    // Unity doesn't garbage-collect it between scenes.
     private static Background? _iconBackground;
     private static Background? _notificationBackground;
+    // Sprite view of the same texture as the notification banner —
+    // needed because the weather panel's wide progress indicator is
+    // a custom-mesh SimpleProgressBar that takes a Sprite (not a
+    // Background) and renders it directly via OnGenerateVisualContent.
+    // WeatherPanelBackgroundPatch writes this into the bar's private
+    // _image field.
+    private static Sprite? _notificationSprite;
 
     // null if the PNG is missing or failed to decode — patches should
     // skip the override in that case to keep the vanilla art visible
@@ -48,6 +55,27 @@ internal static class FloodArt {
             if (_notificationBackground.HasValue) return _notificationBackground;
             _notificationBackground = TryLoad(NotificationRelative);
             return _notificationBackground;
+        }
+    }
+
+    public static Sprite? NotificationSprite {
+        get {
+            if (_notificationSprite != null) return _notificationSprite;
+            // Piggyback on NotificationBackground so we don't decode
+            // the PNG twice. Background struct exposes its Texture2D
+            // via the .texture field; a null check guards against the
+            // (vanishingly unlikely) case where the Background was
+            // constructed from something other than a Texture2D.
+            var bg = NotificationBackground;
+            if (!bg.HasValue) return null;
+            var tex = bg.Value.texture;
+            if (tex == null) return null;
+            _notificationSprite = Sprite.Create(
+                tex,
+                new Rect(0f, 0f, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f));
+            _notificationSprite.hideFlags = HideFlags.HideAndDontSave;
+            return _notificationSprite;
         }
     }
 
