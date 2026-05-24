@@ -13,6 +13,10 @@ Code.runtimeconfig.dev.json
 # but local overrides aren't.
 .claude/settings.local.json
 
+# Agent worktrees — separate git repos that other Claude sessions
+# create for isolated work. Never part of this repo's history.
+.claude/worktrees/
+
 # IDE
 .vs/
 .idea/

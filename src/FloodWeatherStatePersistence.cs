@@ -51,14 +51,17 @@ internal class FloodWeatherStatePersistence
     private readonly HazardousWeatherService _hazardousWeatherService;
     private readonly ISingletonLoader _singletonLoader;
     private readonly EventBus _eventBus;
+    private readonly BadtideWeather _badtideWeather;
 
     public FloodWeatherStatePersistence(
         HazardousWeatherService hazardousWeatherService,
         ISingletonLoader singletonLoader,
-        EventBus eventBus) {
+        EventBus eventBus,
+        BadtideWeather badtideWeather) {
         _hazardousWeatherService = hazardousWeatherService;
         _singletonLoader = singletonLoader;
         _eventBus = eventBus;
+        _badtideWeather = badtideWeather;
         Debug.Log("[Flood Season] FloodWeatherStatePersistence constructed");
     }
 
@@ -117,6 +120,23 @@ internal class FloodWeatherStatePersistence
         // water contamination.
         _eventBus.Post(new HazardousWeatherSelectedEvent(flood, _hazardousWeatherService.HazardousWeatherDuration));
         Debug.Log("[Flood Season] PostLoad: re-fired HazardousWeatherSelectedEvent so UI helper refreshes");
+
+        // Fire a fake HazardousWeatherEndedEvent carrying the vanilla
+        // BadtideWeather instance. Reason: vanilla HazardousWeatherService.Load
+        // restored the cycle as badtide (its boolean schema can't represent
+        // a third state), so by the time entities initialised, every
+        // BadtideWaterSourceContaminationController saw IsBadtideWeather=true
+        // and enabled itself — contaminating water sources during what
+        // should be a flood. Posting EndedEvent(badtide) walks every
+        // controller through its OnHazardousWeatherEnded handler, which
+        // checks `is BadtideWeather` (true here), calls ResetContamination
+        // and DisableComponent. Cleanup done.
+        //
+        // The only subscriber to HazardousWeatherEndedEvent in the base
+        // game (per grep) is BadtideWaterSourceContaminationController, so
+        // posting it for a non-current weather has no other side effects.
+        _eventBus.Post(new HazardousWeatherEndedEvent(_badtideWeather));
+        Debug.Log("[Flood Season] PostLoad: posted fake EndedEvent(BadtideWeather) to reset wrongly-enabled contamination controllers");
     }
 
 }
