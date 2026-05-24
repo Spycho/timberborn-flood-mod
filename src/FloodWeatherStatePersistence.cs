@@ -50,12 +50,15 @@ internal class FloodWeatherStatePersistence
 
     private readonly HazardousWeatherService _hazardousWeatherService;
     private readonly ISingletonLoader _singletonLoader;
+    private readonly EventBus _eventBus;
 
     public FloodWeatherStatePersistence(
         HazardousWeatherService hazardousWeatherService,
-        ISingletonLoader singletonLoader) {
+        ISingletonLoader singletonLoader,
+        EventBus eventBus) {
         _hazardousWeatherService = hazardousWeatherService;
         _singletonLoader = singletonLoader;
+        _eventBus = eventBus;
         Debug.Log("[Flood Season] FloodWeatherStatePersistence constructed");
     }
 
@@ -102,6 +105,18 @@ internal class FloodWeatherStatePersistence
         setter.Invoke(_hazardousWeatherService, new object[] { flood });
         var afterSet = _hazardousWeatherService.CurrentCycleHazardousWeather;
         Debug.Log($"[Flood Season] PostLoad: restored flood. CurrentCycleHazardousWeather is now {afterSet?.GetType().Name} (id={afterSet?.Id})");
+
+        // Re-fire HazardousWeatherSelectedEvent so HazardousWeatherUIHelper
+        // re-reads CurrentCycleHazardousWeather and refreshes the cached
+        // UI spec. Otherwise the helper's _currentUISpecification stays at
+        // whatever vanilla Load set it to (badtide, since IsDroughtKey
+        // defaulted to false) — the player sees flood behaviour but
+        // badtide labels and icons. The only HazardousWeatherSelectedEvent
+        // subscriber is HazardousWeatherUIHelper.OnHazardousWeatherSelected,
+        // so re-firing has no side effects on sound, notifications, or
+        // water contamination.
+        _eventBus.Post(new HazardousWeatherSelectedEvent(flood, _hazardousWeatherService.HazardousWeatherDuration));
+        Debug.Log("[Flood Season] PostLoad: re-fired HazardousWeatherSelectedEvent so UI helper refreshes");
     }
 
 }
