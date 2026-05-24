@@ -1,4 +1,5 @@
 using HarmonyLib;
+using Timberborn.WeatherSystem;
 using UnityEngine.UIElements;
 
 namespace Spycho.FloodSeason.Patches;
@@ -24,17 +25,31 @@ namespace Spycho.FloodSeason.Patches;
 // / badtide), we clear our inline override so the vanilla CSS shows
 // through again.
 //
+// IMPORTANT: gate on _weatherService.IsHazardousWeather as well as
+// FloodWeather.IsCurrent. CurrentCycleHazardousWeather is set at cycle
+// START and persists through BOTH the temperate phase and the hazardous
+// phase of that cycle — so FloodWeather.IsCurrent alone is true during
+// the temperate stretch of a "this cycle's hazard will be a flood"
+// cycle. Vanilla UpdateIcon deliberately leaves the icon area blank
+// during temperate (it just removes the modifier class), so without
+// the IsHazardousWeather gate we paint the flood texture over what
+// should be an empty icon and the player sees the flood glyph during
+// sunny temperate days.
+//
 // DatePanel is internal, so we patch by string type name. UpdateIcon is
 // private — Harmony's reflection-based patching reaches it regardless.
-// _root is field-injected via the four-underscore convention (three for
-// Harmony's prefix-strip + the field's own leading underscore).
+// _root and _weatherService are field-injected via the four-underscore
+// convention (three for Harmony's prefix-strip + the field's own
+// leading underscore).
 [HarmonyPatch("Timberborn.WeatherSystemUI.DatePanel", "UpdateIcon")]
 internal static class DatePanelIconPatch {
 
     private const string IconClass = "date-panel__icon";
 
     [HarmonyPostfix]
-    public static void Postfix(VisualElement ____root) {
+    public static void Postfix(
+            VisualElement ____root,
+            WeatherService ____weatherService) {
         // _root is set in DatePanel.Load. If UpdateIcon is somehow called
         // before Load completes, bail rather than throwing.
         if (____root == null) {
@@ -45,7 +60,7 @@ internal static class DatePanelIconPatch {
             return;
         }
         var flood = FloodWeather.Instance;
-        if (flood != null && flood.IsCurrent) {
+        if (flood != null && flood.IsCurrent && ____weatherService.IsHazardousWeather) {
             var bg = FloodArt.IconBackground;
             if (bg.HasValue) {
                 icon.style.backgroundImage = new StyleBackground(bg.Value);
@@ -54,8 +69,9 @@ internal static class DatePanelIconPatch {
             // PNG failed to load — fall through to clearing so we don't
             // freeze whatever previous override was sitting on the element.
         }
-        // Not flood (or asset missing). Reset to StyleKeyword.Null so
-        // class-based CSS resolution takes over again.
+        // Not flood, not in the hazardous phase, or asset missing. Reset
+        // to StyleKeyword.Null so class-based CSS resolution takes over
+        // again — which during temperate means "no image", same as vanilla.
         icon.style.backgroundImage = StyleKeyword.Null;
     }
 
