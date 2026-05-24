@@ -2,7 +2,7 @@ using HarmonyLib;
 using Timberborn.HazardousWeatherSystem;
 using UnityEngine.UIElements;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Overrides the "Flood has begun!" banner background to our flood texture.
 //

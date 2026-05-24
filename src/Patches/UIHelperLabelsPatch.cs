@@ -2,7 +2,7 @@ using HarmonyLib;
 using Timberborn.HazardousWeatherSystem;
 using Timberborn.HazardousWeatherSystemUI;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // HazardousWeatherUIHelper exposes five string-returning loc-key
 // properties (NameLocKey, ApproachingLocKey, InProgressLocKey,

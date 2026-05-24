@@ -1,7 +1,7 @@
 using System.Reflection;
 using HarmonyLib;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Prefix on Timberborn.Localization.Loc.T(string) that short-circuits
 // our FloodSeason.* loc-keys to the literal English strings in

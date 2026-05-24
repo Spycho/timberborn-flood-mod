@@ -2,7 +2,7 @@ using ModSettings.Core;
 using Timberborn.Modding;
 using Timberborn.SettingsSystem;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Provides the in-game Mod Settings panel entry for this mod. Subclasses
 // ModSettingsOwner from eMka.ModSettings (declared as a RequiredMods entry
@@ -25,7 +25,7 @@ internal class FloodSeasonSettings : ModSettingsOwner {
     // that can't take DI) have a way to read the current settings values.
     public static FloodSeasonSettings? Instance { get; private set; }
 
-    protected override string ModId => "Kallikor.FloodSeason";
+    protected override string ModId => "Spycho.FloodSeason";
 
     public override ModSettingsContext ChangeableOn =>
         ModSettingsContext.MainMenu | ModSettingsContext.Game;

@@ -5,7 +5,7 @@ using Timberborn.WaterSourceSystem;
 using Timberborn.WeatherSystem;
 using UnityEngine;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Per-entity component attached to every WaterSource by the TemplateModule
 // decorator wired in FloodSeasonConfigurator. The game multiplies our

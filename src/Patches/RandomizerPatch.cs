@@ -2,7 +2,7 @@ using HarmonyLib;
 using Timberborn.HazardousWeatherSystem;
 using UnityEngine;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Harmony postfix on HazardousWeatherRandomizer.GetRandomWeatherForCycle.
 //

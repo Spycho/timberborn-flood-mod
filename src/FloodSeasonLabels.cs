@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Loc-keys and their English values for the flood weather UI strings.
 // Kept in one place so LocalizationPatch can resolve them and

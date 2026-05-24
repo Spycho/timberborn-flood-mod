@@ -3,7 +3,7 @@ using Timberborn.HazardousWeatherSystem;
 using Timberborn.WeatherSystem;
 using UnityEngine;
 
-namespace Kallikor.FloodSeason.Patches;
+namespace Spycho.FloodSeason.Patches;
 
 // Postfix on the game's DroughtWaterStrengthModifier.GetStrengthModifier
 // that adds the user's DroughtAdditive setting on top, clamped to [0, 1].

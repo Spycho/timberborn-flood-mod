@@ -2,7 +2,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Lazy loader for the mod's PNG art assets.
 //

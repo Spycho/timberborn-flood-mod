@@ -5,7 +5,7 @@ using Timberborn.SingletonSystem;
 using Timberborn.WorldPersistence;
 using UnityEngine;
 
-namespace Kallikor.FloodSeason;
+namespace Spycho.FloodSeason;
 
 // Saves and restores the "flood was active when we saved" bit.
 //
@@ -43,7 +43,7 @@ internal class FloodWeatherStatePersistence
     : ILoadableSingleton, ISaveableSingleton, IPostLoadableSingleton {
 
     private static readonly SingletonKey FloodSeasonStateKey =
-        new SingletonKey("Kallikor.FloodSeason.FloodWeatherState");
+        new SingletonKey("Spycho.FloodSeason.FloodWeatherState");
 
     private static readonly PropertyKey<bool> IsFloodActiveKey =
         new PropertyKey<bool>("IsFloodActive");
