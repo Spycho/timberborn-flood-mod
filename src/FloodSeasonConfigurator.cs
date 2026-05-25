@@ -28,6 +28,11 @@ internal class FloodSeasonConfigurator : Configurator {
         // to read. Game-only — there's no hazardous weather in main menu.
         Bind<FloodWeather>().AsSingleton();
 
+        // Same lifecycle story for MixedTideWeather — a separate custom
+        // IHazardousWeather that the randomizer postfix can pick via
+        // MixedTideWeather.Instance.
+        Bind<MixedTideWeather>().AsSingleton();
+
         // Save/load preservation of the active-flood bit. Implements
         // both ISaveableSingleton (Save() called when the game writes a
         // save) and IPostLoadableSingleton (PostLoad() called after the

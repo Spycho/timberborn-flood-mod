@@ -100,6 +100,57 @@ internal class FloodSeasonSettings : ModSettingsOwner {
             .Create("Flood grace cycles")
             .SetTooltip("Cycles that must pass before a flood can occur. Mirrors the vanilla 'cycles before badtide' knob."));
 
+    // --- Mixed Tide ---
+    //
+    // A second custom hazard that contaminates water at a configurable
+    // PERCENTAGE (e.g. 30% bad / 70% clean) rather than vanilla badtide's
+    // full-contamination curve. Tunable duration, flow multiplier, and
+    // its own probability share of the hazard roll. Off by default —
+    // turning it on participates in the weighted single roll with Flood
+    // (see RandomizerPatch).
+
+    public ModSetting<bool> MixedTideEnabled { get; } = new ModSetting<bool>(
+        defaultValue: false,
+        ModSettingDescriptor
+            .Create("Enable mixed tide")
+            .SetTooltip("Off by default. When on, hazardous cycles may be replaced by a mixed tide — partly contaminated water at a configurable mix ratio — instead of the usual drought or badtide. Coexists with the flood season setting: their probability percentages split the hazard roll, with any leftover going to the vanilla drought/badtide picker."));
+
+    public ModSetting<int> MixedTideProbabilityPercent { get; } = new ModSetting<int>(
+        defaultValue: 25,
+        ModSettingDescriptor
+            .Create("Mixed tide probability (%)")
+            .SetTooltip("Chance per hazardous cycle that a mixed tide is rolled. Combined with the flood probability into a single weighted roll: if the two sum to <100 the remainder is vanilla; if >100 the slice is normalised so the two share 100%."));
+
+    public ModSetting<int> MixedTideGraceCycles { get; } = new ModSetting<int>(
+        defaultValue: 5,
+        ModSettingDescriptor
+            .Create("Mixed tide grace cycles")
+            .SetTooltip("Cycles that must pass before a mixed tide can occur. Separate from the flood grace so the two custom hazards can be staggered if desired."));
+
+    public ModSetting<int> MixedTideDurationMinDays { get; } = new ModSetting<int>(
+        defaultValue: 2,
+        ModSettingDescriptor
+            .Create("Mixed tide duration min (days)")
+            .SetTooltip("Lower bound (inclusive) on the number of in-game days a mixed tide lasts. Each mixed tide rolls a random duration in [min, max]."));
+
+    public ModSetting<int> MixedTideDurationMaxDays { get; } = new ModSetting<int>(
+        defaultValue: 4,
+        ModSettingDescriptor
+            .Create("Mixed tide duration max (days)")
+            .SetTooltip("Upper bound (inclusive) on the number of in-game days a mixed tide lasts. Each mixed tide rolls a random duration in [min, max]."));
+
+    public ModSetting<int> MixedTideMultiplierPercent { get; } = new ModSetting<int>(
+        defaultValue: 100,
+        ModSettingDescriptor
+            .Create("Mixed tide flow multiplier (%)")
+            .SetTooltip("Scales water source flow during a mixed tide. 100 = vanilla badtide-equivalent flow rate (contamination is independent of flow). Raise to keep more water moving while the mix is bad."));
+
+    public ModSetting<int> MixedTideContaminationPercent { get; } = new ModSetting<int>(
+        defaultValue: 30,
+        ModSettingDescriptor
+            .Create("Mixed tide contamination (%)")
+            .SetTooltip("Fraction of bad water emitted by every source during a mixed tide. 0 = clean (no contamination); 30 = 30% bad, 70% clean — the headline mixed-tide effect; 100 = behaves like full badtide (every drop is bad)."));
+
     public FloodSeasonSettings(
         ISettings settings,
         ModSettingsOwnerRegistry registry,
@@ -111,9 +162,16 @@ internal class FloodSeasonSettings : ModSettingsOwner {
     // Convenience accessors. Each clamps to non-negative because the
     // text inputs are now unbounded and a stray negative entry would
     // otherwise produce reversed or zero flow in weird places.
-    public float TemperateMultiplier => System.Math.Max(0, TemperateMultiplierPercent.Value) / 100f;
-    public float DroughtAdditive    => System.Math.Max(0, DroughtAdditivePercent.Value)    / 100f;
-    public float BadtideMultiplier  => System.Math.Max(0, BadtideMultiplierPercent.Value)  / 100f;
-    public float FloodMultiplier    => System.Math.Max(0, FloodMultiplierPercent.Value)    / 100f;
+    public float TemperateMultiplier   => System.Math.Max(0, TemperateMultiplierPercent.Value)   / 100f;
+    public float DroughtAdditive       => System.Math.Max(0, DroughtAdditivePercent.Value)       / 100f;
+    public float BadtideMultiplier     => System.Math.Max(0, BadtideMultiplierPercent.Value)     / 100f;
+    public float FloodMultiplier       => System.Math.Max(0, FloodMultiplierPercent.Value)       / 100f;
+    public float MixedTideMultiplier   => System.Math.Max(0, MixedTideMultiplierPercent.Value)   / 100f;
+    // Contamination is also clamped to 1.0f at the consumer end
+    // (WaterSourceContamination.SetContamination uses Mathf.Min(strength, 1f))
+    // but clamping here too means the in-game tooltip reading "100" produces
+    // exactly 1.0f without a stray 101 silently capping.
+    public float MixedTideContamination =>
+        System.Math.Min(1f, System.Math.Max(0, MixedTideContaminationPercent.Value) / 100f);
 
 }
