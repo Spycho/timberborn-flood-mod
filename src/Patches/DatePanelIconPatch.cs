@@ -4,7 +4,8 @@ using UnityEngine.UIElements;
 
 namespace Spycho.FloodSeason.Patches;
 
-// Overrides the top-right date-panel icon to the flood texture during a flood.
+// Overrides the top-right date-panel icon during a custom hazard:
+// flood texture during a Flood, mixed-tide texture during a Mixed Tide.
 //
 // DatePanel.UpdateIcon (Timberborn.WeatherSystemUI, internal) adds the
 // IconClass it reads from HazardousWeatherUIHelper to the panel's _root.
@@ -59,19 +60,25 @@ internal static class DatePanelIconPatch {
         if (icon == null) {
             return;
         }
-        var flood = FloodWeather.Instance;
-        if (flood != null && flood.IsCurrent && ____weatherService.IsHazardousWeather) {
-            var bg = FloodArt.IconBackground;
+        if (____weatherService.IsHazardousWeather) {
+            Background? bg = null;
+            if (FloodWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.IconBackground;
+            } else if (MixedTideWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.MixedTideIconBackground;
+            }
             if (bg.HasValue) {
                 icon.style.backgroundImage = new StyleBackground(bg.Value);
                 return;
             }
-            // PNG failed to load — fall through to clearing so we don't
-            // freeze whatever previous override was sitting on the element.
+            // Either we're in a vanilla hazard (no override needed) or
+            // the matching PNG failed to load — fall through to clearing
+            // so vanilla CSS resolution takes over.
         }
-        // Not flood, not in the hazardous phase, or asset missing. Reset
-        // to StyleKeyword.Null so class-based CSS resolution takes over
-        // again — which during temperate means "no image", same as vanilla.
+        // Not in the hazardous phase of a custom weather, or asset
+        // missing. Reset to StyleKeyword.Null so class-based CSS
+        // resolution takes over again — during temperate this means
+        // "no image", same as vanilla.
         icon.style.backgroundImage = StyleKeyword.Null;
     }
 

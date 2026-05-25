@@ -4,7 +4,8 @@ using UnityEngine.UIElements;
 namespace Spycho.FloodSeason.Patches;
 
 // Overrides the big central "X has begun!" / "X is approaching!" banner
-// background to our flood texture during a flood.
+// background during a custom hazard: flood texture for a Flood,
+// mixed-tide texture for a Mixed Tide.
 //
 // HazardousWeatherNotificationPanel.ShowNotification (private, internal
 // class, Timberborn.HazardousWeatherSystemUI) is the shared chokepoint
@@ -42,16 +43,22 @@ internal static class NotificationBackgroundPatch {
         if (____background == null) {
             return;
         }
-        if (isHazardous && FloodWeather.Instance is { IsCurrent: true }) {
-            var bg = FloodArt.NotificationBackground;
+        if (isHazardous) {
+            Background? bg = null;
+            if (FloodWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.NotificationBackground;
+            } else if (MixedTideWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.MixedTideNotificationBackground;
+            }
             if (bg.HasValue) {
                 ____background.style.backgroundImage = new StyleBackground(bg.Value);
                 return;
             }
-            // PNG missing — fall through to clearing so the vanilla CSS
-            // class shows through rather than rendering nothing.
+            // Either vanilla hazard (no override) or matching PNG
+            // failed to load — fall through to clearing so the vanilla
+            // CSS class resolves the correct image.
         }
-        // Not a flood-themed notification (or asset missing). Clear any
+        // Not a custom-hazard notification, or asset missing. Clear any
         // stale inline override so the class-driven CSS background-image
         // resolves correctly (drought, badtide, or wet-weather).
         ____background.style.backgroundImage = StyleKeyword.Null;

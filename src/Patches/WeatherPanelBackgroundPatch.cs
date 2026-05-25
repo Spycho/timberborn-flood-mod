@@ -6,7 +6,8 @@ using UnityEngine.UIElements;
 namespace Spycho.FloodSeason.Patches;
 
 // Overrides the wide hazard-themed background BEHIND the progress bar
-// during the in-progress phase of a flood.
+// during the in-progress phase of a custom hazard: flood texture for a
+// Flood, mixed-tide texture for a Mixed Tide.
 //
 // Vanilla weather panel composition (per the user's observation against
 // real drought / badtide cycles):
@@ -54,24 +55,22 @@ internal static class WeatherPanelBackgroundPatch {
         if (____simpleProgressBar == null) {
             return;
         }
-        var flood = FloodWeather.Instance;
-        bool useFloodBackground =
-            flood != null
-            && flood.IsCurrent
-            && ____weatherService.IsHazardousWeather;
-
-        if (useFloodBackground) {
-            var bg = FloodArt.NotificationBackground;
+        if (____weatherService.IsHazardousWeather) {
+            Background? bg = null;
+            if (FloodWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.NotificationBackground;
+            } else if (MixedTideWeather.Instance is { IsCurrent: true }) {
+                bg = FloodArt.MixedTideNotificationBackground;
+            }
             if (bg.HasValue) {
                 ____simpleProgressBar.style.backgroundImage = new StyleBackground(bg.Value);
                 return;
             }
-            // PNG missing — fall through to clearing so the bar's
-            // class-driven background shows through rather than
-            // freezing whatever inline override sat on it before.
+            // Either vanilla hazard (no override) or matching PNG
+            // failed to load — fall through to clearing.
         }
-        // Not flood-in-progress (or asset missing). Reset to
-        // StyleKeyword.Null so vanilla CSS resolves the correct
+        // Not in-progress of a custom hazard (or asset missing). Reset
+        // to StyleKeyword.Null so vanilla CSS resolves the correct
         // class-driven background (drought, badtide, temperate-of-
         // approaching, or nothing).
         ____simpleProgressBar.style.backgroundImage = StyleKeyword.Null;

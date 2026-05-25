@@ -5,8 +5,9 @@ using UnityEngine.UIElements;
 
 namespace Spycho.FloodSeason.Patches;
 
-// Overrides the SimpleProgressBar's mesh-fill sprite to flood during
-// the APPROACHING phase of a flood cycle.
+// Overrides the SimpleProgressBar's mesh-fill sprite during the
+// APPROACHING phase of a custom hazard: flood sprite for an upcoming
+// Flood, mixed-tide sprite for an upcoming Mixed Tide.
 //
 // SimpleProgressBar's draw is a custom mesh:
 //
@@ -65,15 +66,16 @@ internal static class SimpleProgressBarPatch {
         if (!IsWeatherPanelApproachingBar(__instance)) {
             return;
         }
-        var flood = FloodWeather.Instance;
-        if (flood == null || !flood.IsCurrent) {
+        UnityEngine.Sprite? sprite = null;
+        if (FloodWeather.Instance is { IsCurrent: true }) {
+            sprite = FloodArt.NotificationSprite;
+        } else if (MixedTideWeather.Instance is { IsCurrent: true }) {
+            sprite = FloodArt.MixedTideNotificationSprite;
+        }
+        if (sprite == null) {
             return;
         }
-        var floodSprite = FloodArt.NotificationSprite;
-        if (floodSprite == null) {
-            return;
-        }
-        BarImageField.SetValue(__instance, floodSprite);
+        BarImageField.SetValue(__instance, sprite);
         __instance.MarkDirtyRepaint();
     }
 
