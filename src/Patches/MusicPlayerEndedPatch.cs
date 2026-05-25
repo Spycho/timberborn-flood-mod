@@ -35,23 +35,26 @@ namespace Spycho.FloodSeason.Patches;
 //
 // Fix: prefix-skip the music player's handler when it sees the exact
 // signature of our fake post: ended weather is BadtideWeather AND the
-// current cycle's weather is FloodWeather. That combination is
-// impossible in vanilla — when a real badtide ends, CurrentCycleHazardous-
-// Weather is still BadtideWeather, not FloodWeather. So the prefix only
-// suppresses our synthetic event, never a real one.
+// CURRENT cycle's weather is one of our custom hazards (FloodWeather
+// or MixedTideWeather). That combination is impossible in vanilla —
+// when a real badtide ends, CurrentCycleHazardousWeather is still
+// BadtideWeather, not one of our types. So the prefix only suppresses
+// our synthetic event, never a real one.
 //
-// FloodWeather.Instance is the static accessor set in FloodWeather's
-// constructor; using it here avoids needing to field-inject Hazardous-
-// WeatherService into the music player (which doesn't reference it).
+// FloodWeather.Instance / MixedTideWeather.Instance are static
+// accessors set in each weather's constructor; using them avoids
+// having to field-inject HazardousWeatherService into the music player
+// (which doesn't reference it).
 [HarmonyPatch(typeof(GameMusicPlayer), nameof(GameMusicPlayer.OnHazardousWeatherEnded))]
 internal static class MusicPlayerEndedPatch {
 
     [HarmonyPrefix]
     public static bool Prefix(HazardousWeatherEndedEvent hazardousWeatherEndedEvent) {
         if (hazardousWeatherEndedEvent.HazardousWeather is BadtideWeather
-            && FloodWeather.Instance is { IsCurrent: true }) {
+            && (FloodWeather.Instance is { IsCurrent: true }
+                || MixedTideWeather.Instance is { IsCurrent: true })) {
             // Our fake post — swallow it so the music keeps playing the
-            // hazardous (a.k.a. drought) track that Load already started.
+            // hazardous track that Load already started.
             return false;
         }
         return true;

@@ -25,8 +25,11 @@ internal static class SoundPlayerPatch {
 
     [HarmonyPrefix]
     public static bool Prefix(HazardousWeatherStartedEvent hazardousWeatherStartedEvent) {
-        if (hazardousWeatherStartedEvent.HazardousWeather is FloodWeather) {
-            // Skip the original — no sound for flood for now, but no crash either.
+        if (hazardousWeatherStartedEvent.HazardousWeather is FloodWeather
+            || hazardousWeatherStartedEvent.HazardousWeather is MixedTideWeather) {
+            // Skip the original — no dedicated start sound for our
+            // custom weathers, but no crash either (vanilla's hardcoded
+            // if/else throws on unknown types).
             return false;
         }
         return true;

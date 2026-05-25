@@ -99,6 +99,18 @@ Side effect: `HazardousWeatherHistory.GetCyclesCount("DroughtWeather")` aggregat
 
 `GameCycleService.StartNextCycle()` calls `SetForCycle(N)` once when cycle N starts. The chosen `IHazardousWeather` is then saved in the save file. Loading a save **does not** re-roll — `GameCycleService.Load()` restores the saved `Cycle` field and skips `StartNextCycle()`. Settings changes affect only future cycles. The randomizer postfix intercepts at decision time, not retroactively.
 
+### `TemplateModule.AddDecorator<>` needs a paired `Bind<T>().AsTransient()`
+
+`builder.AddDecorator<WaterSource, MyComponent>()` tells the entity system **which** components to attach to each spawned entity, but does **not** tell Bindito **how** to construct `MyComponent`. Without a separate `Bind<MyComponent>().AsTransient()` (or `AsSingleton()`, depending on shape), every entity preview-build hits `BinditoException: No binding exists for type MyComponent` — surfaces as a crash during `BottomBarPanel.Load` (the first place that materialises previews from `PlaceableBlockObjectSpec`). Transient because each entity needs its own instance; singleton would share state across every entity.
+
+### `IObjectLoader.Get(PropertyKey<T>)` throws on missing keys
+
+`IObjectLoader.Get` calls `SerializedObject.Get` which throws `ArgumentOutOfRangeException("Property not found: 'X'")` if the key wasn't in the serialised data. There is no implicit default-on-missing. When extending a save schema with new optional keys, either always-write every key (one true, one false in a flag-pair) or guard reads with `loader.Has<T>(PropertyKey<T>)`. Old saves that pre-date the new key need the `Has()` guard regardless. We hit this when `HazardousWeatherStatePersistence` was written to set only the active hazard's bool and read both — the first absent read crashed PostLoad.
+
+### Custom `IHazardousWeather` won't auto-fire entity-side controllers on save-load
+
+When PostLoad force-restores `CurrentCycleHazardousWeather` to a custom weather (via the private setter), per-entity components like `MixedTideContaminationController` that gated on `current is MixedTideWeather` in `InitializeEntity` are already stuck in the disabled state — vanilla load set current to badtide/drought first, entity init ran, then PostLoad overrode current. No event fires automatically to wake them. Pattern: have the controller also subscribe to `HazardousWeatherSelectedEvent` and gate on `WeatherService.IsHazardousWeather`. PostLoad already re-fires that event for UI refresh; vanilla's own SetForCycle posts it at cycle-start where IsHazardousWeather is still false (temperate half), so the guard naturally scopes the wake-up to "we're loading mid-hazard."
+
 ## External dependencies
 
 Both must be present in the player's mod list — `manifest.json` declares them as required. References use `<Private>false</Private>` so we never redistribute them.

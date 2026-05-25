@@ -8,15 +8,34 @@ namespace Spycho.FloodSeason.Patches;
 //
 // The randomizer's source is a hardcoded binary choice between Drought
 // and Badtide — no DI extension point, no IEnumerable<IHazardousWeather>.
-// So we let the original method run as normal, then *overwrite its
-// result* with our FloodWeather when the player has opted in and a dice
-// roll succeeds. The randomizer's internal streak tracking still runs
-// against the vanilla choice, which is fine for our purposes.
+// So we let the original method run, then *overwrite its result* with
+// our FloodWeather or MixedTideWeather when settings + dice say so.
 //
-// The `cycle` parameter is the absolute game cycle (1, 2, 3, …) — the
-// same value BadtideWeather.CanOccurAtCycle uses for its grace-period
-// gate. It is NOT the per-weather occurrence count the duration math
-// uses (that one comes from HazardousWeatherHistory inside the service).
+// PROBABILITY SCHEME — weighted single roll:
+//
+//   1. Compute each custom hazard's effective probability (0 if its
+//      feature is off OR we're still in its grace period).
+//   2. Sum them. If 0, leave vanilla untouched.
+//   3. If the sum is ≤100, the two probabilities ARE the slices and the
+//      remainder is the vanilla slice (e.g. flood 30 + mixed 30 → 30%
+//      flood, 30% mixed, 40% vanilla drought/badtide).
+//   4. If the sum is >100, normalise so they share 100% (vanilla = 0):
+//      floodSlice = floodP * 100 / total, mixedSlice = 100 - floodSlice.
+//      Integer-truncation can round-off one percentage point at most;
+//      acceptable for v1.
+//   5. Single Random.value roll in [0, 100). Falls in the flood slice →
+//      flood; falls in the mixed slice → mixed tide; otherwise keep
+//      vanilla.
+//
+// The `cycle` parameter is the absolute game cycle (1, 2, 3, …), same
+// as BadtideWeather.CanOccurAtCycle's grace gate. It is NOT the
+// per-weather occurrence count the duration math uses (that one comes
+// from HazardousWeatherHistory inside the service).
+//
+// Note: we use UnityEngine.Random, not the game's seeded
+// IRandomNumberGenerator, so the roll is non-deterministic across
+// reloads. Acceptable — we're not aiming for replay parity, and the
+// roll happens once per cycle at SetForCycle time.
 [HarmonyPatch(typeof(HazardousWeatherRandomizer),
               nameof(HazardousWeatherRandomizer.GetRandomWeatherForCycle))]
 internal static class RandomizerPatch {
@@ -24,29 +43,54 @@ internal static class RandomizerPatch {
     [HarmonyPostfix]
     public static void Postfix(int cycle, ref IHazardousWeather __result) {
         var settings = FloodSeasonSettings.Instance;
-        var flood = FloodWeather.Instance;
-        if (settings == null || flood == null) {
+        if (settings == null) {
             return;
         }
-        if (!settings.FloodSeasonEnabled.Value) {
-            Debug.Log($"[Flood Season] cycle {cycle}: feature off, keeping vanilla {__result?.Id}");
+        int floodP = EffectiveProbability(
+            settings.FloodSeasonEnabled.Value,
+            cycle,
+            settings.FloodGraceCycles.Value,
+            settings.FloodProbabilityPercent.Value);
+        int mixedP = EffectiveProbability(
+            settings.MixedTideEnabled.Value,
+            cycle,
+            settings.MixedTideGraceCycles.Value,
+            settings.MixedTideProbabilityPercent.Value);
+        int total = floodP + mixedP;
+        if (total == 0) {
+            Debug.Log($"[Flood Season] cycle {cycle}: no custom hazard active, keeping vanilla {__result?.Id}");
             return;
         }
-        if (cycle <= settings.FloodGraceCycles.Value) {
-            Debug.Log($"[Flood Season] cycle {cycle}: within grace ({settings.FloodGraceCycles.Value}), keeping vanilla {__result?.Id}");
+        int floodSlice = floodP;
+        int mixedSlice = mixedP;
+        if (total > 100) {
+            floodSlice = floodP * 100 / total;
+            mixedSlice = 100 - floodSlice;
+        }
+        float roll = Random.value * 100f;
+        if (roll < floodSlice) {
+            var flood = FloodWeather.Instance;
+            if (flood != null) {
+                Debug.Log($"[Flood Season] cycle {cycle}: roll {roll:F1} < {floodSlice} (flood slice) → replacing vanilla {__result?.Id} with flood");
+                __result = flood;
+            }
             return;
         }
-        // Random.value is a uniform [0, 1] float; scaling to percent keeps
-        // the slider's UI semantics ("30% means 30 out of 100 cycles") obvious.
-        // Note: this uses UnityEngine.Random (unseeded), not the game's
-        // IRandomNumberGenerator. Saves are therefore not deterministic for
-        // flood occurrences — acceptable, we're not aiming for replay parity.
-        if (Random.value * 100f > settings.FloodProbabilityPercent.Value) {
-            Debug.Log($"[Flood Season] cycle {cycle}: probability roll missed");
+        if (roll < floodSlice + mixedSlice) {
+            var mixed = MixedTideWeather.Instance;
+            if (mixed != null) {
+                Debug.Log($"[Flood Season] cycle {cycle}: roll {roll:F1} in [{floodSlice},{floodSlice + mixedSlice}) (mixed slice) → replacing vanilla {__result?.Id} with mixed tide");
+                __result = mixed;
+            }
             return;
         }
-        Debug.Log($"[Flood Season] cycle {cycle}: replacing vanilla {__result?.Id} with flood");
-        __result = flood;
+        Debug.Log($"[Flood Season] cycle {cycle}: roll {roll:F1} ≥ {floodSlice + mixedSlice}, keeping vanilla {__result?.Id}");
+    }
+
+    private static int EffectiveProbability(bool enabled, int cycle, int graceCycles, int probabilityPercent) {
+        if (!enabled) return 0;
+        if (cycle <= graceCycles) return 0;
+        return System.Math.Max(0, probabilityPercent);
     }
 
 }

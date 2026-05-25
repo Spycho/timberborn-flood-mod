@@ -33,19 +33,37 @@ internal class FloodSeasonConfigurator : Configurator {
         // MixedTideWeather.Instance.
         Bind<MixedTideWeather>().AsSingleton();
 
-        // Save/load preservation of the active-flood bit. Implements
-        // both ISaveableSingleton (Save() called when the game writes a
+        // Save/load preservation of whichever custom hazard
+        // (Flood or Mixed Tide) was active. Implements both
+        // ISaveableSingleton (Save() called when the game writes a
         // save) and IPostLoadableSingleton (PostLoad() called after the
         // vanilla HazardousWeatherService.Load() has run).
-        Bind<FloodWeatherStatePersistence>().AsSingleton();
+        Bind<HazardousWeatherStatePersistence>().AsSingleton();
 
         Bind<FloodSeasonWaterStrengthModifier>().AsTransient();
+        // Per-entity component, one instance per WaterSource. Transient
+        // because each entity gets its own — singletons would share
+        // state across every water source. Without this binding, the
+        // TemplateModule decorator below can attach the component to
+        // entities but Bindito can't construct one, and the game
+        // crashes with BinditoException at first water-source preview
+        // build (during BottomBarPanel.Load).
+        Bind<MixedTideContaminationController>().AsTransient();
         MultiBind<TemplateModule>().ToProvider(ProvideTemplateModule).AsSingleton();
     }
 
     private static TemplateModule ProvideTemplateModule() {
         var builder = new TemplateModule.Builder();
         builder.AddDecorator<WaterSource, FloodSeasonWaterStrengthModifier>();
+        // Mirrors WaterSourceSystemConfigurator's wiring of
+        // BadtideWaterSourceContaminationController, but triggered on
+        // WaterSource itself rather than BadtideWaterSourceContamination-
+        // ControllerSpec (which is internal and unreachable from a mod
+        // assembly). All water sources have WaterSourceContamination,
+        // so the broader trigger is safe — the controller's own
+        // type-check on CurrentCycleHazardousWeather gates whether
+        // contamination actually changes per cycle.
+        builder.AddDecorator<WaterSource, MixedTideContaminationController>();
         return builder.Build();
     }
 
