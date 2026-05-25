@@ -27,12 +27,29 @@ internal static class FloodSeasonLabels {
     public const string StartedKey     = "FloodSeason.Started";
     public const string EndedKey       = "FloodSeason.Ended";
 
+    // Mixed Tide labels live under the same FloodSeason.* prefix so
+    // LocalizationPatch's prefix check still routes them through
+    // FloodSeasonLabels.TryGet without a second prefix-comparison
+    // branch. The label values themselves read "Mixed tide" — they're
+    // visually distinct from the Flood ones in-game (date panel,
+    // forecast banner, notification text).
+    public const string MixedTideNameKey        = "FloodSeason.MixedTide.Name";
+    public const string MixedTideApproachingKey = "FloodSeason.MixedTide.Approaching";
+    public const string MixedTideInProgressKey  = "FloodSeason.MixedTide.InProgress";
+    public const string MixedTideStartedKey     = "FloodSeason.MixedTide.Started";
+    public const string MixedTideEndedKey       = "FloodSeason.MixedTide.Ended";
+
     private static readonly Dictionary<string, string> Strings = new Dictionary<string, string> {
-        [NameKey]        = "Flood",
-        [ApproachingKey] = "Flood approaching",
-        [InProgressKey]  = "Flood in progress",
-        [StartedKey]     = "A flood has begun!",
-        [EndedKey]       = "The flood has ended",
+        [NameKey]                 = "Flood",
+        [ApproachingKey]          = "Flood approaching",
+        [InProgressKey]           = "Flood in progress",
+        [StartedKey]              = "A flood has begun!",
+        [EndedKey]                = "The flood has ended",
+        [MixedTideNameKey]        = "Mixed tide",
+        [MixedTideApproachingKey] = "Mixed tide approaching",
+        [MixedTideInProgressKey]  = "Mixed tide in progress",
+        [MixedTideStartedKey]     = "A mixed tide has begun!",
+        [MixedTideEndedKey]       = "The mixed tide has ended",
     };
 
     public static bool TryGet(string key, out string value) {
