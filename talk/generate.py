@@ -461,11 +461,10 @@ def _slide_builders():
         ("save",     _slide_save_and_postload),
         ("save",     _slide_fake_event_knockon),
 
-        # Mod #3: Mixed Tide (4 slides ~ 6 min)
+        # Mod #3: Mixed Tide (3 slides ~ 5 min)
         ("mod3",     _slide_mod3_intro),
         ("mod3",     _slide_contamination_seam),
         ("mod3",     _slide_demo_mixed_tide),
-        ("mod3",     _slide_doing_it_twice),
 
         # Gotchas catalogue (1 slide ~ 2 min)
         ("lessons",  _slide_gotcha_catalogue),
@@ -493,8 +492,8 @@ def _slide_title(ctx: SlideContext) -> None:
             "with my 6-year-old as the customer. He couldn't read most of the code, but "
             "he made every design decision. Three shipped mods, one we haven't built "
             "yet, and a lot of gotchas in between.'\n\n"
-            "Set expectations: technical walkthrough, three live demos, a future-work "
-            "tease at the end, ~55 minutes content with Q&A after."
+            "Set expectations: technical walkthrough, five live demos interleaved, a "
+            "future-work tease at the end, ~55 minutes content with Q&A after."
         ),
     )
 
@@ -1393,7 +1392,7 @@ def _slide_mod3_intro(ctx: SlideContext) -> None:
     add_quote_slide(
         ctx.prs,
         quote=JASPER_MIXED_QUOTE,
-        attribution=f"{SON_NAME}, feature request #3",
+        attribution=f"{SON_NAME}, feature request #4",
         notes=(
             "The kid's third feature request. After the floods worked, he wanted ANOTHER "
             "mechanic — water that's partly bad, partly clean. Not full badtide, not "
@@ -1437,7 +1436,12 @@ def _slide_contamination_seam(ctx: SlideContext) -> None:
             "not a binary threshold downstream.\n\n"
             "Hat-tip to Mechanistry: contamination flows through the water-column "
             "simulation as a real fraction. No hardcoded 'if > 0 emit bad water'. Our "
-            "30% setting produces actual 30%/70% mixed water that diffuses correctly."
+            "30% setting produces actual 30%/70% mixed water that diffuses correctly.\n\n"
+            "Headline insight on doing the second pass: the patch design from Flood "
+            "Season held up. Every existing patch — UI helper substitution, sound "
+            "player skip, label substitutions, art overrides — just needed ONE more "
+            "conditional branch for Mixed Tide. No restructuring. The gotchas it "
+            "did surface are in the catalogue ahead."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -1461,35 +1465,6 @@ def _slide_demo_mixed_tide(ctx: SlideContext) -> None:
             "mechanic — it's a real ratio that diffuses through the simulation.\n\n"
             "If the contrast-with-real-badtide demo lands, lead with that. Otherwise "
             "just show the mixed tide and move on."
-        ),
-        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
-    )
-
-
-def _slide_doing_it_twice(ctx: SlideContext) -> None:
-    add_bullets_slide(
-        ctx.prs,
-        title="Doing it twice — what the second pass revealed",
-        bullets=[
-            "Every patch from the cascade needed ONE parallel branch for Mixed Tide.",
-            ("WeatherUIHelperPatch: drought spec for flood, badtide spec for mixed.", 1),
-            ("UIHelperLabelsPatch: 5 × postfix get a MixedTide branch.", 1),
-            ("SoundPlayerPatch, NotificationBackgroundPatch, … same shape.", 1),
-            "Three new gotchas surfaced along the way:",
-            ("`TemplateModule.AddDecorator` needs a paired `Bind<T>().AsTransient()`.", 1),
-            ("`IObjectLoader.Get` throws on missing keys — use `loader.Has()` to guard.", 1),
-            ("Entity controllers don't auto-wake on save-restore (PostLoad timing).", 1),
-        ],
-        notes=(
-            "The headline insight: the patch DESIGN from Flood Season held up. Mixed "
-            "Tide didn't require restructuring anything — every existing patch just "
-            "needed one more conditional branch.\n\n"
-            "The third gotcha is the architecturally interesting one: when we "
-            "force-restore the weather in PostLoad, the entity-side components have "
-            "already initialised with the wrong belief about what the current weather "
-            "is. They need a wake-up signal — we subscribe to HazardousWeatherSelected"
-            "Event guarded by IsHazardousWeather, which fires naturally during our "
-            "PostLoad re-emit and stays quiet during vanilla cycle-start."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -1526,7 +1501,7 @@ def _slide_mod4_rainy_intro(ctx: SlideContext) -> None:
     add_quote_slide(
         ctx.prs,
         quote=JASPER_RAIN_BRIEF,
-        attribution=f"{SON_NAME}, feature request #4 (pending)",
+        attribution=f"{SON_NAME}, feature request #5 (pending)",
         notes=(
             "Closing tease. The mod we haven't built yet.\n\n"
             "Frame it as 'here's the next one — let me walk you through what I'd need "
@@ -1545,9 +1520,9 @@ def _slide_mod4_design(ctx: SlideContext) -> None:
             "Goal: water visibly falls from the sky and the map's surface gets wet.",
             "Two components: a new IHazardousWeather (familiar) + a way to add water to map tiles.",
             ("Hazard plumbing: copy the FloodWeather pattern. Spoof Id, parallel branches in patches.", 1),
-            ("Water-adding mechanic: needs investigation. Candidates worth grepping:", 1),
-            ("WaterAdditionService or similar — anything callable per-tile.", 2),
-            ("Decomp WaterSystem already for SimulateContamination — grep for AddWater, AddDepth, etc.", 2),
+            ("Water-adding mechanic: needs investigation. The workflow is the bit that's certain:", 1),
+            ("Decomp the WaterSystem DLL, grep for AddWater / AddDepth / column-mutation calls.", 2),
+            ("Pick a seam if one exists, otherwise plan a per-tile Harmony postfix.", 2),
             ("Particle / visual layer: probably orthogonal. Game already has a rain shader for badtide.", 2),
             "Risk: if water-adding isn't exposed, we're back in Harmony-cascade territory.",
         ],
@@ -1557,6 +1532,9 @@ def _slide_mod4_design(ctx: SlideContext) -> None:
             "Useful talking point: 'this is the workflow you'd use too. Decompile, "
             "grep for keywords matching the behaviour you want, find the seam (or "
             "discover there isn't one), pick the layer, start patching.'\n\n"
+            "I haven't actually grepped yet, so I'm not naming specific types — "
+            "promising 'WaterAdditionService' would invite a 'no, it's called X' "
+            "from anyone who's modded Timberborn before.\n\n"
             "If anyone asks 'when will this be done?' — Jasper hasn't actually asked "
             "yet, this is me predicting. Don't commit to a timeline."
         ),
