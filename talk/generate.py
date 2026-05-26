@@ -52,9 +52,13 @@ TALK_VENUE = "Kallikor tech guild"
 GITHUB_URL = "https://github.com/Spycho/timberborn-flood-mod"
 
 # Jasper's actual feature requests — replace if any of these are
-# off and you want exact wording on the slides.
+# off and you want exact wording on the slides. The "too much water"
+# request and the "flood every now and then" request were two distinct
+# asks that landed in the same Flood Season mod as two phases (more
+# flow during temperate, then flood as a new hazard).
 JASPER_PLATFORM_BRIEF = "I want a platform that goes higher than three."
-JASPER_FLOOD_QUOTE = "Dad, what if there was too much water?"
+JASPER_TEMPERATE_QUOTE = "Dad, what if there was too much water?"
+JASPER_HAZARD_QUOTE = "Dad, what if there was a flood every now and then, like the badtides and droughts?"
 JASPER_MIXED_QUOTE = "Dad, let's make a season with bad and good water."
 JASPER_RAIN_BRIEF = "What if water fell from the sky and made the map wet?"
 
@@ -419,8 +423,9 @@ def _slide_builders():
         ("open",     _slide_jasper_intro),
         ("open",     _slide_three_requests),
 
-        # About Timberborn (3 slides ~ 5 min)
+        # About Timberborn (4 slides ~ 6 min)
         ("game",     _slide_timberborn_60s),
+        ("game",     _slide_demo_vanilla),
         ("game",     _slide_mod_loader),
         ("game",     _slide_three_layers),
 
@@ -456,14 +461,14 @@ def _slide_builders():
         ("save",     _slide_save_and_postload),
         ("save",     _slide_fake_event_knockon),
 
-        # Mod #3: Mixed Tide (3 slides ~ 5 min)
+        # Mod #3: Mixed Tide (4 slides ~ 6 min)
         ("mod3",     _slide_mod3_intro),
         ("mod3",     _slide_contamination_seam),
+        ("mod3",     _slide_demo_mixed_tide),
         ("mod3",     _slide_doing_it_twice),
 
-        # Gotchas + workflow (2 slides ~ 3 min)
+        # Gotchas catalogue (1 slide ~ 2 min)
         ("lessons",  _slide_gotcha_catalogue),
-        ("lessons",  _slide_workflow_lessons),
 
         # Mod #4 future (2 slides ~ 3 min)
         ("mod4",     _slide_mod4_rainy_intro),
@@ -538,17 +543,30 @@ def _slide_jasper_intro(ctx: SlideContext) -> None:
         title=f"The customer: {SON_NAME}, age {SON_AGE}",
         bullets=[
             f"{SON_NAME} loves Timberborn — has played it since he was four.",
-            "Doesn't read code. Reads diff output from a distance, sometimes asks what a word means.",
-            "Sits next to me at the desk, points at the screen, says what he wants the game to do.",
-            "Best PM I've ever worked with: behaviour-driven specs, no architectural opinions, instant user-testing.",
-            ("'I want X' → we go find X in the game and figure out how it works.", 1),
-            ("Three feature requests so far. One more pending.", 1),
+            "Years before I had kids, I built Code for Life — a Blockly-based game that teaches kids to program.",
+            (f"{SON_NAME} learned Blockly on it. Has started Python. Hadn't seen C# before this project.", 1),
+            "We paired: I drove the keyboard and Claude Code. He drove the design.",
+            ("Showed him Claude Code working alongside me — explained the agent's moves in plain English.", 1),
+            ("Walked him through the actual C# at each step, in words he could follow.", 1),
+            "His specs: behaviour-driven and short. 'Make floods big.'",
+            "His feedback: fast and very honest. 'I don't like that.' / 'Cool, do more.'",
+            "Best PM I've ever worked with.",
         ],
         notes=(
-            "This is the human anchor for the talk. Don't oversell it — he's a real "
-            "customer with real specs, treated that way on the slides.\n\n"
-            "If anyone in the audience has kids and is curious about the dynamic, save "
-            "for Q&A — there's a lot to say but the talk is mostly technical."
+            "The human anchor of the talk. A few beats worth landing verbally:\n\n"
+            "1. The Code for Life arc is genuinely worth a sentence. Built it before "
+            "having kids → my kid grew up using it → he's grown enough to drive a real "
+            "modding project. This talk is a continuation of that arc.\n\n"
+            "2. The 'pair programming' framing matters: the actual coding pattern was "
+            "I-on-keyboard-with-Claude-Code, Jasper next to me as customer + first "
+            "user-tester. He didn't read most of the C# — he understood it at the "
+            "level of 'this part picks the weather; this part draws the picture'.\n\n"
+            "3. There's an obvious parallel between pairing with a 6-year-old and "
+            "pairing with an AI agent: both are 'I'm in the driver's seat, you check "
+            "my work and tell me what's next.' Worth flagging if the room is into it, "
+            "but don't belabour. The talk is technical.\n\n"
+            "4. Don't oversell the kid angle. He's not on stage. He shows up at each "
+            "phase as a named customer."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -557,22 +575,27 @@ def _slide_jasper_intro(ctx: SlideContext) -> None:
 def _slide_three_requests(ctx: SlideContext) -> None:
     add_bullets_slide(
         ctx.prs,
-        title="Three requests, three mods, three modding layers",
+        title="Five asks — four answered, one pending",
         bullets=[
             f"#1  '{JASPER_PLATFORM_BRIEF}'  → Quadruple Platform (templates)",
-            f"#2  '{JASPER_FLOOD_QUOTE}'  → Flood Season (interfaces + Harmony)",
-            f"#3  '{JASPER_MIXED_QUOTE}'  → Mixed Tide (same patches, doing it twice)",
-            f"#4  '{JASPER_RAIN_BRIEF}'  → Rainy Season (not built yet — future-work tease)",
+            f"#2  '{JASPER_TEMPERATE_QUOTE}'  → Flood Season A: more flow in temperate (interface)",
+            f"#3  '{JASPER_HAZARD_QUOTE}'  → Flood Season B: flood as a new hazard (Harmony)",
+            f"#4  '{JASPER_MIXED_QUOTE}'  → Mixed Tide (Harmony, parallel branches)",
+            f"#5  '{JASPER_RAIN_BRIEF}'  → Rainy Season (not built yet)",
             "",
-            ("Each mod sits at a different modding layer. We'll walk through the layers as we go.", 1),
+            ("Each ask escalates the modding machinery. We'll walk through layer by layer.", 1),
         ],
         notes=(
             "Set up the talk's structure here. The audience should leave this slide "
-            "knowing they're going to see four feature requests handled with "
-            "progressively heavier machinery.\n\n"
-            "Quadruple Platform is the easy one (data only). Flood Season is the "
-            "meaty one (Harmony patching). Mixed Tide is the stress-test of the patch "
-            "design. Rainy Season is the closing tease — 'here's where we go next.'"
+            "with the whole running order in their head:\n\n"
+            "  #1  Quadruple Platform — pure data, no compilation. Layer 1: templates.\n"
+            "  #2  Flood Season A — implement an exposed interface, register a settings UI. Layer 2.\n"
+            "  #3  Flood Season B — replace a hardcoded vanilla return value with a new type. Layer 3: Harmony.\n"
+            "  #4  Mixed Tide — same patches as Flood Season, parallel branches. Still layer 3, stress-test.\n"
+            "  #5  Rainy Season — future-work tease.\n\n"
+            "Note the two halves of Flood Season — requests #2 and #3 landed in the same "
+            "mod but as two distinct phases driven by two distinct asks from Jasper.\n\n"
+            "Asks escalate roughly: data change → interface → patch → patch-cascade → unknown."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -595,6 +618,29 @@ def _slide_timberborn_60s(ctx: SlideContext) -> None:
             "  - The game has weather cycles\n"
             "  - It's Unity + C#\n"
             "Move on quickly — the rest of the talk is the modding."
+        ),
+        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
+    )
+
+
+def _slide_demo_vanilla(ctx: SlideContext) -> None:
+    add_demo_slide(
+        ctx.prs,
+        title="This is Timberborn",
+        steps=[
+            "Switch to the game — paused at a save with an active Folktails base.",
+            "Point at: water sources flowing, beavers working, the top-right date panel.",
+            "Pan to a body of water — the column simulation is doing its thing.",
+            "If a hazard is approaching, point at the forecast banner. Otherwise mention vanilla cycles drought / badtide / temperate.",
+            "Switch back to slides — 'OK, now we mod it.'",
+        ],
+        notes=(
+            "60-90 seconds. Don't narrate the gameplay in depth — just orient the "
+            "audience. The bits that matter for the rest of the talk:\n"
+            "  - Water sources are a thing\n"
+            "  - The date panel + weather panel sit top-right (we mod both)\n"
+            "  - Cycles tick through Temperate → Hazard → Temperate\n\n"
+            "Don't get drawn into beaver lore. Move on."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -782,21 +828,27 @@ def _slide_mod1_timbermesh(ctx: SlideContext) -> None:
             "    for mesh in meshes:          result += field_message(8, mesh)\n"
             "    return result\n"
             "\n"
-            "# Four pillars + a top slab. Hand-rolled protobuf, encoded to .timbermesh.\n"
-            "# AI helped me decode the schema; I wrote the Python."
+            "# I described what I wanted: \"a Quadruple Platform, mirroring the\n"
+            "# Triple, four pillars and a top slab.\" Claude wrote the whole\n"
+            "# script — protobuf encoding included. It picked its own textures.\n"
+            "# (Reader: those textures are... distinctive.)"
         ),
-        caption="No Blender, no Unity Editor. A Python script that emits the binary directly.",
+        caption="AI wrote the script from a description. AI also picked the textures. Result: funky.",
         notes=(
-            "The reveal here: the .timbermesh model is just zlib+protobuf, and the "
-            "schema is open-sourced. So you don't need to model in Blender and export — "
-            "you can build the binary directly from a script.\n\n"
-            "Be honest about the AI bit — I had an LLM help me decode the proto schema "
-            "and write the geometry helpers. I wrote the structural Python. The output "
-            "is byte-identical to what Blender would have produced if I'd modelled it "
-            "manually.\n\n"
-            "Audience point: 'AI-assisted reverse-engineering of binary formats' is a "
-            "skill that transfers. We could do the same with PlayCanvas asset bundles "
-            "in our stack."
+            "The reveal: the .timbermesh model is zlib+protobuf, schema published on "
+            "GitHub. You don't need to model in Blender and export — you can build the "
+            "binary directly from a script.\n\n"
+            "Be honest about the AI involvement — I didn't write this Python. I "
+            "described what I wanted (a Quadruple Platform mirroring the Triple), and "
+            "Claude wrote the whole thing: protobuf encoding, geometry, materials, "
+            "everything. It also picked its own textures from the materials it found in "
+            "the base game's models. The result is a working four-high platform that "
+            "looks… let's say 'distinctive'. Show the in-game screenshot on the demo "
+            "slide if you want the laugh.\n\n"
+            "Don't apologise for the AI-wrote-it angle. It's the point. This is what "
+            "'AI-driven reverse-engineering of binary formats' actually looks like in "
+            "practice — describe the goal, judge the output, iterate. Same workflow "
+            "would apply to PlayCanvas asset bundles in our stack."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -805,20 +857,21 @@ def _slide_mod1_timbermesh(ctx: SlideContext) -> None:
 def _slide_mod1_demo(ctx: SlideContext) -> None:
     add_demo_slide(
         ctx.prs,
-        title="Demo — build a Quadruple Platform in-game",
+        title="This is with a Quadruple Platform",
         steps=[
-            "Switch to Timberborn (save loaded, near a Folktails base).",
-            "Open the building toolbar → Paths group → Quadruple Platform appears with its icon.",
-            "Place one on flat ground. Beavers haul planks. Construction site stages through.",
-            "Once built: walk a beaver to the top via the in-game build menu — reaches height 4.",
-            "Compare visually with the vanilla Triple Platform stacked next to it.",
+            "Switch to Timberborn — Folktails base loaded, building menu open.",
+            "Paths group → Quadruple Platform appears with its (AI-textured) icon.",
+            "Place one on flat ground. Beavers haul planks. Construction stages through.",
+            "Stand the platform next to a vanilla Triple — the 4-high difference is obvious.",
+            "Pause on the textures for the laugh.",
         ],
         notes=(
             "The point of this demo is to convince the audience that a JSON-only mod "
-            "is GAME-COMPLETE. There's no asterisk, no 'this is a hack' — the building "
-            "shows up in the toolbar, the beavers build it, it works.\n\n"
-            "If anyone asks about Steam Workshop publishing — yes this would ship "
-            "Workshop-ready. The Quadruple Platform isn't uploaded, but it could be."
+            "is GAME-COMPLETE. There's no asterisk — building shows up in the toolbar, "
+            "beavers build it, it works.\n\n"
+            "Land the funky-textures payoff here. The AI picked colours from the base "
+            "game's material palette and combined them in an order Mechanistry would "
+            "not have. Worth a small laugh."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -827,15 +880,17 @@ def _slide_mod1_demo(ctx: SlideContext) -> None:
 def _slide_mod2a_intro(ctx: SlideContext) -> None:
     add_quote_slide(
         ctx.prs,
-        quote=JASPER_FLOOD_QUOTE,
+        quote=JASPER_TEMPERATE_QUOTE,
         attribution=f"{SON_NAME}, feature request #2",
         notes=(
-            "Land the quote, pause, then: 'OK, what does \"too much water\" mean? Let's "
-            "start small — can we just make the wet seasons WETTER, like double the water "
-            "flow during temperate? Then we'll come back to actual floods.'\n\n"
-            "This sets up the two-phase structure of the Flood Season mod: first the "
-            "easy seam (more water during temperate), then the hard pivot to Harmony "
-            "(replacing the actual hazard with a flood)."
+            "Land the quote, pause, then: 'OK, what does \"too much water\" mean? "
+            "Let's start small — can we make the wet seasons WETTER? Double the flow "
+            "during temperate? That's a one-line spec we can act on. Floods themselves "
+            "come later, as a separate ask.'\n\n"
+            "Important framing: this is the SCOPED interpretation of his request. He "
+            "wasn't being specific about 'flood' yet — he just wanted more water. The "
+            "temperate-multiplier story IS the response to this ask. Request #3 "
+            "(flood-as-hazard) came LATER, separately."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -906,33 +961,35 @@ def _slide_iwaterstrength(ctx: SlideContext) -> None:
 def _slide_modifier_class(ctx: SlideContext) -> None:
     add_code_slide(
         ctx.prs,
-        title="Our modifier — switches on the cycle's weather",
+        title="Our modifier — boost flow during temperate",
         code=(
             "internal class FloodSeasonWaterStrengthModifier\n"
             "    : BaseComponent, IAwakableComponent, IInitializableEntity,\n"
             "      IWaterStrengthModifier {\n"
             "\n"
+            "    private readonly WeatherService _weatherService;\n"
+            "    private readonly FloodSeasonSettings _settings;\n"
+            "\n"
             "    public float GetStrengthModifier() {\n"
-            "        if (!_weatherService.IsHazardousWeather) {\n"
-            "            return _settings.TemperateMultiplier;   // wetter wet seasons\n"
+            "        if (_weatherService.IsHazardousWeather) {\n"
+            "            return 1.0f;   // hazardous phase: don't touch flow\n"
             "        }\n"
-            "        return _hazardousWeatherService.CurrentCycleHazardousWeather switch {\n"
-            "            FloodWeather _     => _settings.FloodMultiplier,\n"
-            "            MixedTideWeather _ => _settings.MixedTideMultiplier,\n"
-            "            BadtideWeather _   => _settings.BadtideMultiplier,\n"
-            "            _ => 1.0f,    // drought is owned by a separate Harmony patch\n"
-            "        };\n"
+            "        return _settings.TemperateMultiplier;   // wetter wet seasons\n"
             "    }\n"
             "}"
         ),
+        caption="That's the whole mechanic. ~15 lines. We'll extend the class later as new requests land.",
         notes=(
-            "Walk the code top to bottom. The audience should notice:\n"
-            "  - Switch expression dispatches per weather phase.\n"
-            "  - FloodWeather and MixedTideWeather are types we'll define later — sneak "
-            "preview of the Harmony-built hazards.\n"
-            "  - Drought is conspicuously absent. We patch the game's own drought "
-            "modifier separately (additive, not multiplicative, because vanilla drought "
-            "drives flow to zero at peak — '0 * X = 0' makes a multiplier useless)."
+            "Walk the code top to bottom. Things the audience should notice:\n"
+            "  - Standard mod-component shape: BaseComponent + IWaterStrengthModifier\n"
+            "    + the lifecycle interfaces Timberborn expects (Awake, InitializeEntity).\n"
+            "  - The gate on _weatherService.IsHazardousWeather — during droughts and\n"
+            "    badtides we return 1.0 and let the game's own modifiers handle it.\n"
+            "  - The temperate path returns the user-configured multiplier from the\n"
+            "    settings panel we're about to see on the next slide.\n\n"
+            "This is the WHOLE first half of the Flood Season mod. We'll extend this\n"
+            "class as new asks land (the switch with FloodWeather / MixedTideWeather\n"
+            "cases shows up later, once those types exist) — but right now, this is it."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -979,7 +1036,7 @@ def _slide_bindito_wiring(ctx: SlideContext) -> None:
 def _slide_demo_flow(ctx: SlideContext) -> None:
     add_demo_slide(
         ctx.prs,
-        title="Demo 1 — change the temperate multiplier live",
+        title="This is with temperate flow increased",
         steps=[
             "Open Mod Settings panel in-game.",
             "Set 'Temperate flow multiplier (%)' to 500.",
@@ -988,35 +1045,33 @@ def _slide_demo_flow(ctx: SlideContext) -> None:
             "Optional: speed-time to make the downstream effect obvious.",
         ],
         notes=(
-            "First demo. Pre-load a save with several water sources visible — an empty "
-            "map makes for a boring demo.\n\n"
+            "Pre-load a save with several water sources visible — an empty map makes "
+            "for a boring demo.\n\n"
             "Talking point during demo: 'This is the WHOLE first half of Flood Season "
-            "in 15 lines of C# plus a settings property. Took about an hour the first "
-            "time. We didn't need Harmony at all. The game gave us the seam.'"
+            "in 15 lines of C# plus a settings property. We didn't need Harmony at all. "
+            "The game gave us the seam.'"
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
 
 
 def _slide_mod2b_intro(ctx: SlideContext) -> None:
-    add_bullets_slide(
+    add_quote_slide(
         ctx.prs,
-        title=f"Part B: {SON_NAME} escalates",
-        bullets=[
-            f"More water during temperate is great. But {SON_NAME}: 'I want a FLOOD.'",
-            "Translation: introduce a NEW hazardous weather type alongside Drought + Badtide.",
-            "Look for a seam… and there isn't one.",
-            ("HazardousWeatherRandomizer picks the cycle's weather. Hardcoded if/else.", 1),
-            ("No MultiBind<IHazardousWeather>. No registration call. No event hook.", 1),
-            "Welcome to layer 3 — Harmony.",
-        ],
+        quote=JASPER_HAZARD_QUOTE,
+        attribution=f"{SON_NAME}, feature request #3",
         notes=(
-            "The pivot point. Up to here, modding has felt 'supported'. From here on, "
-            "we're rewriting compiled methods at runtime. The audience should feel the "
-            "gear shift.\n\n"
-            "Mention briefly: the original FloodSeason mod's first commits did just the "
-            "temperate-multiplier (clean seam). Then Jasper asked for floods and the "
-            "patch count exploded."
+            "The escalation. Wetter wet seasons (Flood Season A) was great — and then "
+            "Jasper came back specifically asking for a flood SEASON, like the droughts "
+            "and badtides he already knew about. Not just more water — a whole hazard.\n\n"
+            "Speaker bridge to the next slide:\n"
+            "  'Translation: introduce a NEW IHazardousWeather type, alongside Drought "
+            "and Badtide. Look for a seam… and there isn't one. The picker is a "
+            "hardcoded if/else with two private fields. No MultiBind, no event hook, "
+            "no registration call. Welcome to layer 3 — Harmony.'\n\n"
+            "Then move straight to the next slide which shows the decompiled if/else.\n\n"
+            "Tone shift the audience should feel: up to here, modding has felt "
+            "'supported'. From here on, we're rewriting compiled methods at runtime."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -1115,13 +1170,13 @@ def _slide_4line_postfix(ctx: SlideContext) -> None:
 def _slide_demo_always_flood(ctx: SlideContext) -> None:
     add_demo_slide(
         ctx.prs,
-        title="Demo 2 — every hazard is a flood",
+        title="This is with a flood season",
         steps=[
-            "Open Mod Settings, enable Flood Season, set probability to 100%.",
-            "Set grace cycles to 0 (so the first hazard fires immediately).",
-            "Start a NEW game (cycle weather is decided at cycle START — gotcha).",
+            "Open Mod Settings, enable Flood Season, probability 100%, grace 0.",
+            "Start a NEW game — cycle weather is decided at cycle START (gotcha).",
             "Fast-forward to the first hazardous cycle.",
             "Point at the panel: 'A flood has begun!' instead of drought/badtide.",
+            "Note that the icon + banner still look like drought (cascade fixes coming).",
         ],
         notes=(
             "Don't try to demo on an existing save — the cycle's weather was already "
@@ -1388,6 +1443,29 @@ def _slide_contamination_seam(ctx: SlideContext) -> None:
     )
 
 
+def _slide_demo_mixed_tide(ctx: SlideContext) -> None:
+    add_demo_slide(
+        ctx.prs,
+        title="This is with a mixed tide season",
+        steps=[
+            "Open Mod Settings — enable Mixed Tide, probability 100%, contamination 30%.",
+            "Start a NEW game, fast-forward to the first hazardous cycle.",
+            "Point at the date panel — custom 'Mixed Tide' icon + label.",
+            "Walk the camera to a water source — partly-bad water emitting + diffusing downstream.",
+            "Optional: contrast with a real Badtide cycle (set Mixed Tide off, restart) so the 30%/70% mix vs full bad is visible.",
+        ],
+        notes=(
+            "Pre-prep: a save mid-Mixed-Tide with several water sources visible. The "
+            "audience should see the water visibly tinted with contamination, not "
+            "fully purple/green like a real badtide. The 30% setting is the headline "
+            "mechanic — it's a real ratio that diffuses through the simulation.\n\n"
+            "If the contrast-with-real-badtide demo lands, lead with that. Otherwise "
+            "just show the mixed tide and move on."
+        ),
+        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
+    )
+
+
 def _slide_doing_it_twice(ctx: SlideContext) -> None:
     add_bullets_slide(
         ctx.prs,
@@ -1397,21 +1475,21 @@ def _slide_doing_it_twice(ctx: SlideContext) -> None:
             ("WeatherUIHelperPatch: drought spec for flood, badtide spec for mixed.", 1),
             ("UIHelperLabelsPatch: 5 × postfix get a MixedTide branch.", 1),
             ("SoundPlayerPatch, NotificationBackgroundPatch, … same shape.", 1),
-            "TWO new gotchas surfaced (captured in CLAUDE.md):",
+            "Three new gotchas surfaced along the way:",
             ("`TemplateModule.AddDecorator` needs a paired `Bind<T>().AsTransient()`.", 1),
             ("`IObjectLoader.Get` throws on missing keys — use `loader.Has()` to guard.", 1),
-            "PLUS: custom-weather entity controllers don't auto-wake on save-restore.",
-            ("Fix: subscribe to HazardousWeatherSelectedEvent + check IsHazardousWeather.", 1),
+            ("Entity controllers don't auto-wake on save-restore (PostLoad timing).", 1),
         ],
         notes=(
             "The headline insight: the patch DESIGN from Flood Season held up. Mixed "
             "Tide didn't require restructuring anything — every existing patch just "
             "needed one more conditional branch.\n\n"
-            "Three new gotchas — each captured in CLAUDE.md so future-me doesn't "
-            "re-step on them. The third one (auto-wake on save-restore) is the "
-            "interesting one architecturally: when we force-restore the weather in "
-            "PostLoad, the entity-side components have already initialised with the "
-            "wrong belief about what the current weather is."
+            "The third gotcha is the architecturally interesting one: when we "
+            "force-restore the weather in PostLoad, the entity-side components have "
+            "already initialised with the wrong belief about what the current weather "
+            "is. They need a wake-up signal — we subscribe to HazardousWeatherSelected"
+            "Event guarded by IsHazardousWeather, which fires naturally during our "
+            "PostLoad re-emit and stays quiet during vanilla cycle-start."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
@@ -1420,7 +1498,7 @@ def _slide_doing_it_twice(ctx: SlideContext) -> None:
 def _slide_gotcha_catalogue(ctx: SlideContext) -> None:
     add_bullets_slide(
         ctx.prs,
-        title="CLAUDE.md — the gotcha catalogue",
+        title="Gotchas — nine landmines, documented",
         bullets=[
             "1. bin/obj outside the mod folder (absolute path, not relative)",
             "2. Harmony field-injection needs FOUR underscores for vanilla underscored fields",
@@ -1434,36 +1512,11 @@ def _slide_gotcha_catalogue(ctx: SlideContext) -> None:
         ],
         notes=(
             "If anyone takes a photo of one slide during the talk, it'll be this one. "
-            "Land it slowly.\n\n"
-            "Slide-quality commit messages + a gotcha catalogue in the repo is the "
-            "practice. Next time someone in this room mods Timberborn — or any "
-            "Unity / .NET product — they have a shorter path through."
-        ),
-        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
-    )
-
-
-def _slide_workflow_lessons(ctx: SlideContext) -> None:
-    add_bullets_slide(
-        ctx.prs,
-        title="Workflow lessons (not in CLAUDE.md but worth a slide)",
-        bullets=[
-            "Timberborn's mod loader scans the folder RECURSIVELY — leaving bin/obj inside is fatal.",
-            ("Symptom: 'mod loaded' five times in Player.log, Harmony patch chain weird.", 1),
-            ("Fix: Directory.Build.props with an ABSOLUTE bin path. Relative paths bit us via a worktree.", 1),
-            "Per-phase commits with detailed messages — deliberate practice.",
-            ("git log --oneline reads like a tutorial. By design.", 1),
-            ("Easy to point at any moment and ask 'where were we at this commit?'", 1),
-            "AI-pair-programming the build itself: Claude wrote much of the code under direction.",
-            ("Talk-relevant: the agent surfaces gotchas in CLAUDE.md without being prompted.", 1),
-        ],
-        notes=(
-            "The worktree-pollution story is great talk material because it's "
-            "non-obvious. The mod folder is your repo, your worktrees live inside the "
-            "repo (Claude Code convention), worktree builds drop their output relative "
-            "to the worktree, and the game's recursive scan picks them all up.\n\n"
-            "Don't oversell the AI pair-programming angle. Just note it. Audience can "
-            "draw the parallel to their own work without prompting."
+            "Land it slowly — these are the nine real landmines we hit and wrote down "
+            "for next time.\n\n"
+            "Each one started as a crash, a wrong-looking screenshot, or a confusing "
+            "log line. The discipline that made the list useful: write it down the "
+            "moment you've understood the cause, before the context evaporates."
         ),
         section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
