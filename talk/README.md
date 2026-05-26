@@ -26,7 +26,7 @@ to PowerPoint from a Python script so the deck is rebuildable.
 | Mod #3: Mixed Tide + **demo: mixed tide** | 31–33 | 5 min |
 | Gotcha catalogue | 34 | 2 min |
 | Mod #4: Rainy Season (future) | 35–36 | 3 min |
-| Thanks / Q&A | 37 | 1 min + 10 min Q&A |
+| Closing reflection + Thanks / Q&A | 37–38 | 2 min + 10 min Q&A |
 
 Total content: ~53 minutes. Buffer of a couple of minutes before Q&A.
 
@@ -41,19 +41,20 @@ Output goes to `talk/timberborn-talk.pptx`. Re-running overwrites.
 
 ## Before delivering — fill in
 
-Open `generate.py` and confirm/replace:
+Open `generate.py` and confirm/replace if any of these are off:
 
 ```python
 SON_NAME = "Jasper"
-JASPER_PLATFORM_BRIEF = "I want a platform that goes higher than three."
-JASPER_FLOOD_QUOTE   = "Dad, what if there was too much water?"
-JASPER_MIXED_QUOTE   = "Dad, let's make a season with bad and good water."
-JASPER_RAIN_BRIEF    = "What if water fell from the sky and made the map wet?"
-CLOSING_REFLECTION   = "TODO: one or two sentences..."
+JASPER_PLATFORM_BRIEF   = "I want a platform that goes higher than three."
+JASPER_TEMPERATE_QUOTE  = "Dad, what if there was too much water?"
+JASPER_HAZARD_QUOTE     = "Dad, what if there was a flood every now and then, like the badtides and droughts?"
+JASPER_MIXED_QUOTE      = "Dad, let's make a season with bad and good water."
+JASPER_RAIN_BRIEF       = "What if water fell from the sky and made the map wet?"
 ```
 
-The closing reflection appears in the Q&A slide's speaker notes — fill
-in something specific you actually learnt.
+The closing reflection now has its own slide (`_slide_closing_reflection`)
+just before the Thanks slide — content baked into the script, edit
+that function directly if you want different wording.
 
 ## Dry-run checklist
 

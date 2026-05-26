@@ -62,15 +62,6 @@ JASPER_HAZARD_QUOTE = "Dad, what if there was a flood every now and then, like t
 JASPER_MIXED_QUOTE = "Dad, let's make a season with bad and good water."
 JASPER_RAIN_BRIEF = "What if water fell from the sky and made the map wet?"
 
-# Closing slide line. Replace with something specific you actually
-# learnt. Placeholder makes the deck read end-to-end during iteration.
-CLOSING_REFLECTION = (
-    "TODO: one or two sentences on what pair-programming with a "
-    "kindergartener actually taught you. Best PM I've ever had / "
-    "customer-driven scoping / something true and specific. "
-    "Script ships with a placeholder."
-)
-
 
 # --- Theme -------------------------------------------------------------------
 
@@ -473,7 +464,8 @@ def _slide_builders():
         ("mod4",     _slide_mod4_rainy_intro),
         ("mod4",     _slide_mod4_design),
 
-        # Close (1 slide + Q&A)
+        # Close (2 slides + Q&A)
+        ("close",    _slide_closing_reflection),
         ("close",    _slide_thanks_qa),
     ]
 
@@ -1542,6 +1534,35 @@ def _slide_mod4_design(ctx: SlideContext) -> None:
     )
 
 
+def _slide_closing_reflection(ctx: SlideContext) -> None:
+    add_bullets_slide(
+        ctx.prs,
+        title="What he came away with",
+        bullets=[
+            f"Not C#. Not knowing how to mod a game on his own. That wasn't the point.",
+            f"He came away knowing this kind of work is reachable — and unafraid to try.",
+            ("Including unafraid to ask an AI for help and judge what it gives him.", 1),
+            "Years ago I built Code for Life to teach kids what code is.",
+            ("This project was the same impulse, scaled up: show him the shape, let him grow into it.", 1),
+        ],
+        notes=(
+            "Speak this slowly while the audience reads. It's the closing reflection.\n\n"
+            "Framing: 'The goal wasn't to teach Jasper C#. The goal was to show him "
+            "this kind of work — decompiling, patching, asking an AI for help, "
+            "checking the output — is reachable. So he can grow into it without "
+            "flinching.'\n\n"
+            "The Code-for-Life arc said out loud, if you want to land it verbally:\n"
+            "  'Years ago, before I had kids, I built Code for Life because I wanted "
+            "  kids — eventually mine — to grow up seeing what programming actually "
+            "  is. Jasper learned to code on it. This project, modding a Unity game "
+            "  with him as the PM, is that same impulse at the next scale.'\n\n"
+            "End on something close to: 'he's six. He has time. The point was the "
+            "shape.' → next slide (Thanks)."
+        ),
+        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
+    )
+
+
 def _slide_thanks_qa(ctx: SlideContext) -> None:
     add_title_slide(
         ctx.prs,
@@ -1549,8 +1570,9 @@ def _slide_thanks_qa(ctx: SlideContext) -> None:
         subtitle="Questions?",
         sub2=f"github.com/Spycho/timberborn-flood-mod   ·   designed by {SON_NAME}, age {SON_AGE}",
         notes=(
-            f"Closing reflection (placeholder, replace with something specific): {CLOSING_REFLECTION}\n\n"
-            "Q&A starts here. ~10 minutes.\n\n"
+            "The previous slide carried the closing reflection. This slide is "
+            "purely the handover to Q&A. Pause briefly, then 'Questions?'.\n\n"
+            "Q&A is ~10 minutes.\n\n"
             "Likely questions to prep for:\n"
             "  - 'Why not contribute a PR to Timberborn instead?' — Mechanistry doesn't "
             "take random PRs; the mod ecosystem is the supported extension point.\n"
