@@ -16,17 +16,17 @@ to PowerPoint from a Python script so the deck is rebuildable.
 
 | Section | Slides | Time |
 |---|---|---|
-| Opening — title + Kallikor parallel + Jasper + the three requests | 1–5 | 6 min |
-| About Timberborn — game primer + mod loader + three layers | 6–8 | 5 min |
-| Mod #1: Quadruple Platform (templates layer) | 9–13 | 6 min |
-| Mod #2: Flood Season — flow rate (interfaces layer) | 14–19 | 7 min |
-| Mod #2: Flood Season — flood hazard (Harmony) | 20–24 | 7 min |
-| The cascade — UI helper throws, id-spoof, inline overrides | 25–28 | 6 min |
-| Save / load + fake-event knock-on | 29–30 | 4 min |
-| Mod #3: Mixed Tide (doing it twice) | 31–33 | 5 min |
-| Gotchas + workflow lessons | 34–35 | 3 min |
-| Mod #4: Rainy Season (future) | 36–37 | 3 min |
-| Thanks / Q&A | 38 | 1 min + 10 min Q&A |
+| Opening — title + Kallikor parallel + Jasper + the three requests | 1–4 | 5 min |
+| About Timberborn — game primer + mod loader + three layers | 5–7 | 5 min |
+| Mod #1: Quadruple Platform (templates layer) | 8–12 | 6 min |
+| Mod #2: Flood Season — flow rate (interfaces layer) | 13–18 | 7 min |
+| Mod #2: Flood Season — flood hazard (Harmony) | 19–23 | 7 min |
+| The cascade — UI helper throws, id-spoof, inline overrides | 24–27 | 6 min |
+| Save / load + fake-event knock-on | 28–29 | 4 min |
+| Mod #3: Mixed Tide (doing it twice) | 30–32 | 5 min |
+| Gotchas + workflow lessons | 33–34 | 3 min |
+| Mod #4: Rainy Season (future) | 35–36 | 3 min |
+| Thanks / Q&A | 37 | 1 min + 10 min Q&A |
 
 Total content: ~53 minutes. Buffer of a couple of minutes before Q&A.
 

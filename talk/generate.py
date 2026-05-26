@@ -413,9 +413,8 @@ def build() -> Presentation:
 
 def _slide_builders():
     return [
-        # Opening (7 slides ~ 9 min)
+        # Opening (4 slides ~ 5 min)
         ("open",     _slide_title),
-        ("open",     _slide_why_here),
         ("open",     _slide_kallikor_compare),
         ("open",     _slide_jasper_intro),
         ("open",     _slide_three_requests),
@@ -492,29 +491,6 @@ def _slide_title(ctx: SlideContext) -> None:
             "Set expectations: technical walkthrough, three live demos, a future-work "
             "tease at the end, ~55 minutes content with Q&A after."
         ),
-    )
-
-
-def _slide_why_here(ctx: SlideContext) -> None:
-    add_bullets_slide(
-        ctx.prs,
-        title="Why a Timberborn talk at a Kallikor tech guild?",
-        bullets=[
-            "We build a simulation platform for a living. Timberborn IS a simulation.",
-            "Different paradigm, same shape of problem — see next slide.",
-            "Modding lets you reach into a shipped product without source — useful skill.",
-            ("Decompiling a .NET assembly, finding extension seams, patching at runtime.", 1),
-            ("All transferable to debugging / extending third-party software in our stack.", 1),
-            "And the kid wanted it, so we made it.",
-        ],
-        notes=(
-            "The point of this slide is to plant the flag: this isn't a hobby ramble, "
-            "this is a tour of techniques the audience will use day-to-day. The "
-            "Kallikor parallel slide that follows is where we make that concrete.\n\n"
-            "Don't apologise for the talk being about a game. Frame it as a "
-            "constrained case study with a real customer."
-        ),
-        section=ctx.section, slide_num=ctx.slide_num, total=ctx.total,
     )
 
 
